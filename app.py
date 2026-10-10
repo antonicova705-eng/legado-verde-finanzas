@@ -457,6 +457,7 @@ if menu == "📊 Resumen Ejecutivo":
   else:
     ventas_filtradas = df_ops["Ventas Producto"].sum()
     remanente_filtrado = df_ops["Remanente"].sum()
+    unidades_filtradas = int(df_ops["Cantidad"].sum())
 
     col1, col2, col3, col4, col5 = st.columns(5)
     col1.metric("Ventas Filtradas", f"${ventas_filtradas:,.2f}")
@@ -494,8 +495,8 @@ if menu == "📊 Resumen Ejecutivo":
       st.plotly_chart(fig_c, use_container_width=True)
 
     with col_g2:
-      st.subheader("📈 Análisis de Punto de Equilibrio")
-      rango_u = np.linspace(0, max(pe_unidades * 2, 1500), 100)
+      st.subheader("📈 Análisis de Punto de Equilibrio & Avance Actual")
+      rango_u = np.linspace(0, max(pe_unidades * 2, unidades_filtrada * 1.5, 1500), 100)
       v_linea = rango_u * st.session_state.precio_venta
       c_linea = cf_mensual_total + (rango_u * cv_unitario_total)
 
@@ -516,12 +517,25 @@ if menu == "📊 Resumen Ejecutivo":
               line=dict(color="#d90429", width=3),
           )
       )
+      # Marcador de Punto de Equilibrio Teórico
       fig_pe.add_trace(
           go.Scatter(
               x=[pe_unidades],
               y=[pe_pesos],
-              name="Equilibrio",
+              name="Punto de Equilibrio",
               marker=dict(size=12, color="#8EB712"),
+          )
+      )
+      # Marcador de Avance Actual basado en los filtros seleccionados
+      fig_pe.add_trace(
+          go.Scatter(
+              x=[unidades_filtradas],
+              y=[ventas_filtradas],
+              mode="markers+text",
+              name="Avance Actual",
+              text=[f"Avance: {unidades_filtradas} un."],
+              textposition="top right",
+              marker=dict(size=14, color="#1b4332", symbol="diamond"),
           )
       )
       fig_pe.update_layout(
