@@ -4,54 +4,86 @@ import plotly.graph_objects as go
 import streamlit as st
 
 # ==========================================
-# CONFIGURACIÓN DE PÁGINA Y ESTILO VISUAL
+# CONFIGURACIÓN DE PÁGINA Y BRANDING CSS
 # ==========================================
 st.set_page_config(
     page_title="Legado Verde - Sistema Financiero",
-    page_icon="🌱",
+    page_icon="🥑",
     layout="wide",
     initial_sidebar_state="expanded",
 )
 
+# Estilos CSS basados en la paleta oficial del logo
 st.markdown(
     """
     <style>
-    /* Estilos generales y paleta institucional */
-    .main { background-color: #F9F9F6; }
-    h1, h2, h3 { color: #1b4332; font-family: 'Helvetica Neue', sans-serif; }
+    /* Fondo principal Beige Institucional */
+    .stApp {
+        background-color: #F4F0EA;
+    }
     
-    /* Tarjetas de métricas profesionales */
-    .metric-card {
+    /* Encabezados y títulos en Verde Bosque */
+    h1, h2, h3, .stSubheader {
+        color: #0B5127 !important;
+        font-family: 'Georgia', serif;
+        font-weight: 700;
+    }
+    
+    /* Tarjetas de métricas estilizadas */
+    [data-testid="stMetricValue"] {
+        color: #0B5127 !important;
+        font-size: 1.8rem !important;
+        font-weight: bold;
+    }
+    
+    div[data-testid="metric-container"] {
         background-color: #FFFFFF;
-        padding: 20px;
-        border-radius: 10px;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-        border-left: 5px solid #2d6a4f;
-        margin-bottom: 10px;
+        padding: 15px 20px;
+        border-radius: 12px;
+        box-shadow: 0 4px 10px rgba(11, 81, 39, 0.08);
+        border-left: 6px solid #8EB712;
     }
     
-    /* Botones y contenedores */
+    /* Botones con estilo institucional */
     .stButton>button {
-        background-color: #2d6a4f;
-        color: white;
-        border-radius: 6px;
-        border: none;
-        padding: 8px 16px;
-        font-weight: 600;
+        background-color: #0B5127 !important;
+        color: #FFFFFF !important;
+        border-radius: 8px !important;
+        border: none !important;
+        padding: 10px 20px !important;
+        font-weight: bold !important;
+        transition: all 0.3s ease;
     }
+    
     .stButton>button:hover {
-        background-color: #1b4332;
+        background-color: #8EB712 !important;
+        color: #FFFFFF !important;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    }
+
+    /* Modificación de la barra lateral */
+    section[data-testid="stSidebar"] {
+        background-color: #EFE9E0;
+        border-right: 1px solid #DCD5C9;
     }
     </style>
 """,
     unsafe_allow_html=True,
 )
 
-# Encabezado principal
+# ==========================================
+# LOGO Y ENCABEZADO
+# ==========================================
+st.sidebar.image(
+    "https://drive.google.com/thumbnail?id=1j9PfF082J_VzWP2bQURgQw8BVgeI3aK9&sz=w1000",
+    use_container_width=True,
+)
+st.sidebar.markdown("---")
+
 st.title("🌱 Legado Verde: Sistema Financiero Inteligente")
 st.markdown(
-    "Tablero gerencial integrado para el control de costos, ventas por canal,"
-    " punto de equilibrio y simulación de escenarios."
+    "*Tablero gerencial integrado para el control de costos, ventas por canal,"
+    " punto de equilibrio y simulación de escenarios.*"
 )
 st.markdown("---")
 
@@ -310,12 +342,9 @@ if "operaciones_df" not in st.session_state:
   st.session_state.operaciones_df = pd.DataFrame(ops_iniciales)
 
 # ==========================================
-# BARRA LATERAL: NAVEGACIÓN PROFESIONAL
+# BARRA LATERAL: NAVEGACIÓN
 # ==========================================
-st.sidebar.image(
-    "https://img.icons8.com/color/96/guacamole.png", width=70
-)  # Ícono representativo
-st.sidebar.markdown("### Navegación Gerencial")
+st.sidebar.markdown("### Módulos Gerenciales")
 menu = st.sidebar.radio(
     "Seleccione módulo:",
     [
@@ -372,7 +401,6 @@ pe_pesos = (
 if menu == "📊 Resumen Ejecutivo":
   st.subheader("📊 Resumen Ejecutivo & Indicadores Clave")
 
-  # Filtros superiores interactivos
   col_f1, col_f2, col_f3 = st.columns([2, 2, 1])
 
   meses_disponibles = sorted(
@@ -414,7 +442,6 @@ if menu == "📊 Resumen Ejecutivo":
   )
   st.markdown("---")
 
-  # Filtrado de operaciones
   df_ops = st.session_state.operaciones_df[
       st.session_state.operaciones_df["Estado"] != "Cancelado"
   ]
@@ -431,7 +458,6 @@ if menu == "📊 Resumen Ejecutivo":
     ventas_filtradas = df_ops["Ventas Producto"].sum()
     remanente_filtrado = df_ops["Remanente"].sum()
 
-    # Métricas en tarjetas estilizadas
     col1, col2, col3, col4, col5 = st.columns(5)
     col1.metric("Ventas Filtradas", f"${ventas_filtradas:,.2f}")
     col2.metric("Remanente Reportado", f"${remanente_filtrado:,.2f}")
@@ -454,7 +480,7 @@ if menu == "📊 Resumen Ejecutivo":
               go.Bar(
                   x=df_c_res["Canal"],
                   y=df_c_res["Ventas Producto"],
-                  marker_color="#2d6a4f",
+                  marker_color="#0B5127",
               )
           ]
       )
@@ -479,7 +505,7 @@ if menu == "📊 Resumen Ejecutivo":
               x=rango_u,
               y=v_linea,
               name="Ventas Totales",
-              line=dict(color="#2d6a4f", width=3),
+              line=dict(color="#0B5127", width=3),
           )
       )
       fig_pe.add_trace(
@@ -495,7 +521,7 @@ if menu == "📊 Resumen Ejecutivo":
               x=[pe_unidades],
               y=[pe_pesos],
               name="Equilibrio",
-              marker=dict(size=12, color="#ffb703"),
+              marker=dict(size=12, color="#8EB712"),
           )
       )
       fig_pe.update_layout(
@@ -670,7 +696,7 @@ elif menu == "📋 Catálogo de Costos & Configuración":
       "📥 Exportar Catálogo de Costos (CSV)",
       data=csv_bytes,
       file_name="catalogo_costos_legado_verde.csv",
-      mime="text/css" if False else "text/csv",
+      mime="text/csv",
   )
 
 # ==========================================
