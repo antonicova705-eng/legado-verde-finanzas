@@ -1,3 +1,4 @@
+from datetime import date
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
@@ -24,8 +25,8 @@ st.markdown(
 
 st.title("🌱 Legado Verde: Sistema Financiero Inteligente")
 st.markdown(
-    "*Plataforma unificada: Histórico de operaciones, catálogo de costos dinámico"
-    " y análisis de rentabilidad.*"
+    "*Plataforma unificada: Histórico de operaciones, ventas por canal,"
+    " catálogo de costos y análisis de rentabilidad.*"
 )
 st.markdown("---")
 
@@ -41,7 +42,7 @@ if "vol_prod" not in st.session_state:
 if "precio_venta" not in st.session_state:
   st.session_state.precio_venta = 60.00
 
-# Catálogo Editable de Costos (Nueva App)
+# Catálogo Editable de Costos
 if "catalogo_df" not in st.session_state:
   datos_iniciales = [
       {
@@ -187,92 +188,117 @@ if "catalogo_df" not in st.session_state:
   ]
   st.session_state.catalogo_df = pd.DataFrame(datos_iniciales)
 
-# Datos Históricos (App Anterior)
-if "historico_df" not in st.session_state:
-  data_hist = [
+# Base de Operaciones / Ventas por Canal detalladas
+if "operaciones_df" not in st.session_state:
+  ops_iniciales = [
       {
+          "ID": "ML-001",
           "Mes": "Julio 2026",
           "Canal": "Mercado Libre",
+          "Referencia": "ML-JUL-01",
+          "Producto": "Guacamole Liofilizado 40g",
+          "Cantidad": 22,
           "Ventas Producto": 1341.0,
-          "Remanente Reportado": 450.90,
-          "Estado": "Validado",
+          "Remanente": 450.90,
+          "Ingresos Envío": 0.0,
+          "Comisiones": 150.0,
+          "Costos Logísticos": 0.0,
+          "Ajustes": 0.0,
+          "Estado": "Entregado",
       },
       {
+          "ID": "ML-002",
           "Mes": "Agosto 2026",
           "Canal": "Mercado Libre",
+          "Referencia": "ML-AGO-01",
+          "Producto": "Guacamole Liofilizado 40g",
+          "Cantidad": 17,
           "Ventas Producto": 1044.0,
-          "Remanente Reportado": 538.88,
-          "Estado": "Validado",
+          "Remanente": 538.88,
+          "Ingresos Envío": 0.0,
+          "Comisiones": 120.0,
+          "Costos Logísticos": 0.0,
+          "Ajustes": 0.0,
+          "Estado": "Entregado",
       },
       {
+          "ID": "ML-003",
           "Mes": "Septiembre 2026",
           "Canal": "Mercado Libre",
+          "Referencia": "ML-SEP-01",
+          "Producto": "Guacamole Liofilizado 40g",
+          "Cantidad": 22,
           "Ventas Producto": 1342.0,
-          "Remanente Reportado": 873.92,
-          "Estado": "Validado",
+          "Remanente": 873.92,
+          "Ingresos Envío": 0.0,
+          "Comisiones": 150.0,
+          "Costos Logísticos": 0.0,
+          "Ajustes": 0.0,
+          "Estado": "Entregado",
       },
       {
+          "ID": "ML-004",
           "Mes": "Octubre 2026 (Parcial)",
           "Canal": "Mercado Libre",
+          "Referencia": "ML-OCT-01",
+          "Producto": "Guacamole Liofilizado 40g",
+          "Cantidad": 15,
           "Ventas Producto": 895.0,
-          "Remanente Reportado": 638.40,
-          "Estado": "Parcial / En Camino",
+          "Remanente": 638.40,
+          "Ingresos Envío": 0.0,
+          "Comisiones": 95.0,
+          "Costos Logísticos": 0.0,
+          "Ajustes": 0.0,
+          "Estado": "En Camino",
       },
       {
+          "ID": "AMZ-001",
           "Mes": "Julio - Sept 2026",
           "Canal": "Amazon",
+          "Referencia": "AMZ-RESUMEN",
+          "Producto": "Guacamole Liofilizado 40g",
+          "Cantidad": 7,
           "Ventas Producto": 420.0,
-          "Remanente Reportado": -75.67,
+          "Remanente": -75.67,
+          "Ingresos Envío": 264.18,
+          "Comisiones": 382.93,
+          "Costos Logísticos": 30.15,
+          "Ajustes": -11.40,
           "Estado": "Resumen Global",
       },
       {
+          "ID": "CAF-001",
           "Mes": "Pendiente de Fechar",
           "Canal": "Cafeterías",
+          "Referencia": "CAF-LOTE-1",
+          "Producto": "Guacamole Liofilizado 40g",
+          "Cantidad": 250,
           "Ventas Producto": 15000.0,
-          "Remanente Reportado": 15000.0,
-          "Estado": "Pendiente Fechas",
+          "Remanente": 15000.0,
+          "Ingresos Envío": 0.0,
+          "Comisiones": 0.0,
+          "Costos Logísticos": 0.0,
+          "Ajustes": 0.0,
+          "Estado": "Entregado",
       },
   ]
-  st.session_state.historico_df = pd.DataFrame(data_hist)
+  st.session_state.operaciones_df = pd.DataFrame(ops_iniciales)
 
 # ==========================================
-# BARRA LATERAL: NAVEGACIÓN Y PARÁMETROS
+# BARRA LATERAL: NAVEGACIÓN Y CONFIGURACIÓN
 # ==========================================
 st.sidebar.header("🎛️ Panel de Control")
 menu = st.sidebar.radio(
     "Selecciona una sección:",
     [
         "📊 Resumen Ejecutivo",
-        "📋 Catálogo de Costos",
-        "📈 Histórico y Canales",
+        "🌐 Ventas por Canal",
+        "📋 Catálogo de Costos & Configuración",
         "🔮 Simulador de Escenarios",
     ],
 )
 
-st.sidebar.markdown("---")
-st.sidebar.subheader("Parámetros Globales")
-st.session_state.precio_venta = st.sidebar.number_input(
-    "Precio Venta Promedio ($)",
-    min_value=1.0,
-    value=float(st.session_state.precio_venta),
-    step=1.0,
-)
-st.session_state.vol_prod = st.sidebar.number_input(
-    "Volumen Producción Mensual (Sobres)",
-    min_value=1,
-    value=int(st.session_state.vol_prod),
-    step=50,
-)
-st.session_state.tc_usd = st.sidebar.number_input(
-    "Tipo de Cambio USD/MXN",
-    min_value=10.0,
-    value=float(st.session_state.tc_usd),
-    step=0.5,
-)
-
-# ==========================================
 # CÁLCULOS AUTOMÁTICOS DESDE EL CATÁLOGO
-# ==========================================
 cv_unitario_total = 0.0
 cf_mensual_total = 0.0
 
@@ -311,107 +337,289 @@ pe_pesos = (
     else 0
 )
 
-# Ventas totales registradas históricamente (excluyendo pendientes o sumando según criterio)
-ventas_historicas_totales = st.session_state.historico_df[
-    st.session_state.historico_df["Estado"] != "Pendiente Fechas"
-]["Ventas Producto"].sum()
-
 # ==========================================
-# VISTA 1: RESUMEN EJECUTIVO
+# VISTA 1: RESUMEN EJECUTIVO (CON FILTROS INTERACTIVOS)
 # ==========================================
 if menu == "📊 Resumen Ejecutivo":
-  st.subheader("📊 Resumen Ejecutivo & Estado Operativo")
+  st.subheader("📊 Resumen Ejecutivo & Indicadores Clave")
 
-  col1, col2, col3, col4, col5 = st.columns(5)
-  col1.metric("Ventas Históricas", f"${ventas_historicas_totales:,.2f}")
-  col2.metric("Costo Variable Unit.", f"${cv_unitario_total:,.2f}")
-  col3.metric("Gastos Fijos Mensuales", f"${cf_mensual_total:,.2f}")
-  col4.metric(
-      "Punto de Equilibrio",
-      f"{pe_unidades:,} sobres",
-      f"${pe_pesos:,.2f} MXN",
+  # Controles de filtros en forma de botón / selectores desplegables superiores
+  col_f1, col_f2, col_f3 = st.columns([2, 2, 1])
+
+  meses_disponibles = sorted(
+      st.session_state.operaciones_df["Mes"].unique().tolist()
   )
-  col5.metric(
-      "Margen Contribución",
-      f"{margen_contribucion_pct*100:.1f}%",
-      f"${contribucion_unitaria:,.2f} u.",
+  canales_disponibles = [
+      "Todos los canales",
+      "Mercado Libre",
+      "Amazon",
+      "Cafeterías",
+      "Venta directa",
+      "Otros canales",
+  ]
+
+  with col_f1:
+    meses_seleccionados = st.multiselect(
+        "📅 Elegir meses", options=meses_disponibles, default=meses_disponibles
+    )
+
+  with col_f2:
+    canal_seleccionado = st.selectbox(
+        "🌐 Elegir canal", options=canales_disponibles, index=0
+    )
+
+  with col_f3:
+    st.write("")
+    st.write("")
+    if st.button("🔄 Restablecer filtros"):
+      st.rerun()
+
+  # Etiqueta de selección activa
+  txt_meses = (
+      ", ".join(meses_seleccionados)
+      if meses_seleccionados
+      else "Ningún mes seleccionado"
   )
+  st.info(f"🔍 **Selección activa:** {txt_meses} · **{canal_seleccionado}**")
+
+  # Filtrado de operaciones (excluyendo canceladas y pendientes de fecha si no se seleccionan explícitamente)
+  df_ops = st.session_state.operaciones_df[
+      st.session_state.operaciones_df["Estado"] != "Cancelado"
+  ]
+
+  if meses_seleccionados:
+    df_ops = df_ops[df_ops["Mes"].isin(meses_seleccionados)]
+
+  if canal_seleccionado != "Todos los canales":
+    df_ops = df_ops[df_ops["Canal"] == canal_seleccionado]
+
+  # Validar si existen registros
+  if df_ops.empty:
+    st.warning(
+        "⚠️ No existen registros para la combinación de filtros seleccionada."
+    )
+  else:
+    ventas_filtradas = df_ops["Ventas Producto"].sum()
+    remanente_filtrado = df_ops["Remanente"].sum()
+    cantidad_filtrada = df_ops["Cantidad"].sum()
+
+    col1, col2, col3, col4, col5 = st.columns(5)
+    col1.metric("Ventas Filtradas", f"${ventas_filtradas:,.2f}")
+    col2.metric("Remanente Reportado", f"${remanente_filtrado:,.2f}")
+    col3.metric("Costo Variable Unit.", f"${cv_unitario_total:,.2f}")
+    col4.metric("Gastos Fijos Mensuales", f"${cf_mensual_total:,.2f}")
+    col5.metric(
+        "Punto de Equilibrio",
+        f"{pe_unidades:,} sobres",
+        f"${pe_pesos:,.2f} MXN",
+    )
+
+    st.markdown("---")
+
+    col_g1, col_g2 = st.columns(2)
+    with col_g1:
+      st.subheader("🌐 Ventas por Canal (Filtrado)")
+      df_c_res = df_ops.groupby("Canal")["Ventas Producto"].sum().reset_index()
+      fig_c = go.Figure(
+          data=[
+              go.Bar(
+                  x=df_c_res["Canal"],
+                  y=df_c_res["Ventas Producto"],
+                  marker_color="#2d6a4f",
+              )
+          ]
+      )
+      fig_c.update_layout(
+          height=320, margin=dict(t=20, b=20, l=20, r=20), yaxis_title="MXN"
+      )
+      st.plotly_chart(fig_c, use_container_width=True)
+
+    with col_g2:
+      st.subheader("📈 Gráfica de Punto de Equilibrio Dinámica")
+      rango_u = np.linspace(0, max(pe_unidades * 2, 1500), 100)
+      v_linea = rango_u * st.session_state.precio_venta
+      c_linea = cf_mensual_total + (rango_u * cv_unitario_total)
+
+      fig_pe = go.Figure()
+      fig_pe.add_trace(
+          go.Scatter(
+              x=rango_u,
+              y=v_linea,
+              name="Ventas Totales",
+              line=dict(color="#2d6a4f", width=3),
+          )
+      )
+      fig_pe.add_trace(
+          go.Scatter(
+              x=rango_u,
+              y=c_linea,
+              name="Costos Totales",
+              line=dict(color="#d90429", width=3),
+          )
+      )
+      fig_pe.add_trace(
+          go.Scatter(
+              x=[pe_unidades],
+              y=[pe_pesos],
+              name="Equilibrio",
+              marker=dict(size=12, color="#ffb703"),
+          )
+      )
+      fig_pe.update_layout(
+          height=320,
+          margin=dict(t=20, b=20, l=20, r=20),
+          xaxis_title="Sobres",
+          yaxis_title="MXN",
+      )
+      st.plotly_chart(fig_pe, use_container_width=True)
+
+# ==========================================
+# VISTA 2: VENTAS POR CANAL
+# ==========================================
+elif menu == "🌐 Ventas por Canal":
+  st.subheader("🌐 Gestión y Detalle de Ventas por Canal")
+  st.markdown(
+      "Visualiza operaciones por canal, distingue ventas de producto frente a"
+      " remanentes y administra registros manuales."
+  )
+
+  canal_sel = st.selectbox(
+      "Filtrar vista por canal:",
+      [
+          "Todos",
+          "Mercado Libre",
+          "Amazon",
+          "Cafeterías",
+          "Venta directa",
+          "Otros canales",
+      ],
+  )
+
+  df_view = st.session_state.operaciones_df
+  if canal_sel != "Todos":
+    df_view = df_view[df_view["Canal"] == canal_sel]
+
+  st.dataframe(df_view, use_container_width=True)
+
+  # Bloque de elementos pendientes de fecha
+  df_pendientes = st.session_state.operaciones_df[
+      st.session_state.operaciones_df["Mes"] == "Pendiente de Fechar"
+  ]
+  if not df_pendientes.empty:
+    st.warning(
+        "⚠️ **Atención:** Existen importes sin fecha asignada (ej. Cafeterías)."
+        " Estos se muestran en un bloque separado para evitar distorsiones"
+        " mensuales:"
+    )
+    st.dataframe(df_pendientes, use_container_width=True)
 
   st.markdown("---")
+  st.subheader("➕ Agregar / Registrar Nueva Venta (Cafeterías / Directa / Otros)")
 
-  col_g1, col_g2 = st.columns(2)
-  with col_g1:
-    st.subheader("⚖️ Estructura de Costos y Margen")
-    fig_est = go.Figure(
-        data=[
-            go.Pie(
-                labels=[
-                    "Costos Fijos Asignados",
-                    "Costos Variables Totales",
-                    "Margen de Contribución",
-                ],
-                values=[
-                    cf_mensual_total,
-                    cv_unitario_total * st.session_state.vol_prod,
-                    max(0, contribucion_unitaria * st.session_state.vol_prod),
-                ],
-                hole=0.4,
-                marker_colors=["#1b4332", "#2d6a4f", "#95d5b2"],
-            )
-        ]
-    )
-    fig_est.update_layout(height=320, margin=dict(t=20, b=20, l=20, r=20))
-    st.plotly_chart(fig_est, use_container_width=True)
+  with st.form("form_nueva_venta"):
+    f_col1, f_col2, f_col3 = st.columns(3)
+    with f_col1:
+      new_canal = st.selectbox(
+          "Canal", ["Cafeterías", "Venta directa", "Otros canales"]
+      )
+      new_ref = st.text_input("Referencia / Folio", "VENTA-001")
+    with f_col2:
+      new_mes = st.text_input("Mes y Año (ej. Octubre 2026)", "Octubre 2026")
+      new_prod = st.text_input("Producto", "Guacamole Liofilizado 40g")
+    with f_col3:
+      new_cant = st.number_input("Cantidad (Sobres)", min_value=1, value=50)
+      new_monto = st.number_input(
+          "Importe Venta Producto ($ MXN)", min_value=0.0, value=3000.0
+      )
 
-  with col_g2:
-    st.subheader("📈 Gráfica de Punto de Equilibrio Dinámica")
-    rango_u = np.linspace(0, max(pe_unidades * 2, 1500), 100)
-    v_linea = rango_u * st.session_state.precio_venta
-    c_linea = cf_mensual_total + (rango_u * cv_unitario_total)
+    submitted = st.form_submit_button("Guardar Registro de Venta")
+    if submitted:
+      nuevo_id = f"REG-{len(st.session_state.operaciones_df)+1}"
+      nueva_fila = {
+          "ID": nuevo_id,
+          "Mes": new_mes,
+          "Canal": new_canal,
+          "Referencia": new_ref,
+          "Producto": new_prod,
+          "Cantidad": new_cant,
+          "Ventas Producto": new_monto,
+          "Remanente": new_monto,
+          "Ingresos Envío": 0.0,
+          "Comisiones": 0.0,
+          "Costos Logísticos": 0.0,
+          "Ajustes": 0.0,
+          "Estado": "Entregado",
+      }
+      st.session_state.operaciones_df = pd.concat(
+          [st.session_state.operaciones_df, pd.DataFrame([nueva_fila])],
+          ignore_index=True,
+      )
+      st.success(f"¡Venta registrada con éxito bajo el ID {nuevo_id}!")
+      st.rerun()
 
-    fig_pe = go.Figure()
-    fig_pe.add_trace(
-        go.Scatter(
-            x=rango_u,
-            y=v_linea,
-            name="Ventas Totales",
-            line=dict(color="#2d6a4f", width=3),
-        )
+  st.markdown("---")
+  st.subheader("⚙️ Cancelar o Ajustar Registro")
+  id_a_cancelar = st.selectbox(
+      "Selecciona el ID de la operación a cancelar:",
+      st.session_state.operaciones_df["ID"].tolist(),
+  )
+  if st.button("Marcar Registro como Cancelado"):
+    st.session_state.operaciones_df.loc[
+        st.session_state.operaciones_df["ID"] == id_a_cancelar, "Estado"
+    ] = "Cancelado"
+    st.success(
+        f"La operación {id_a_cancelar} ha sido marcada como cancelada"
+        " (conservando trazabilidad)."
     )
-    fig_pe.add_trace(
-        go.Scatter(
-            x=rango_u,
-            y=c_linea,
-            name="Costos Totales",
-            line=dict(color="#d90429", width=3),
-        )
-    )
-    fig_pe.add_trace(
-        go.Scatter(
-            x=[pe_unidades],
-            y=[pe_pesos],
-            name="Equilibrio",
-            marker=dict(size=12, color="#ffb703"),
-        )
-    )
-    fig_pe.update_layout(
-        height=320,
-        margin=dict(t=20, b=20, l=20, r=20),
-        xaxis_title="Sobres",
-        yaxis_title="MXN",
-    )
-    st.plotly_chart(fig_pe, use_container_width=True)
+    st.rerun()
 
-# ==========================================
-# VISTA 2: CATÁLOGO DE COSTOS
-# ==========================================
-elif menu == "📋 Catálogo de Costos":
-  st.subheader("📋 Catálogo Interactivo de Costos y Formación de Precios")
-  st.markdown(
-      "Modifica los valores directamente en la tabla. Los cambios actualizarán"
-      " instantáneamente los cálculos financieros."
+  # Exportación de datos filtrados
+  st.markdown("---")
+  csv_ops = df_view.to_csv(index=False).encode("utf-8")
+  st.download_button(
+      "📥 Exportar Ventas Filtradas (CSV)",
+      data=csv_ops,
+      file_name="ventas_legado_verde.csv",
+      mime="text/csv",
   )
 
+# ==========================================
+# VISTA 3: CATÁLOGO DE COSTOS & CONFIGURACIÓN
+# ==========================================
+elif menu == "📋 Catálogo de Costos & Configuración":
+  st.subheader("📋 Catálogo Interactivo de Costos y Configuración Global")
+  st.markdown(
+      "Administra los parámetros globales (precio de venta, volumen de"
+      " producción, tipo de cambio) y edita la estructura de costos y gastos."
+  )
+
+  # Parámetros globales reubicados desde el resumen ejecutivo
+  st.markdown("### ⚙️ Parámetros Globales del Negocio")
+  cg1, cg2, cg3 = st.columns(3)
+  with cg1:
+    st.session_state.precio_venta = st.number_input(
+        "Precio Venta Promedio ($)",
+        min_value=1.0,
+        value=float(st.session_state.precio_venta),
+        step=1.0,
+    )
+  with cg2:
+    st.session_state.vol_prod = st.number_input(
+        "Volumen Producción Mensual (Sobres)",
+        min_value=1,
+        value=int(st.session_state.vol_prod),
+        step=50,
+    )
+  with cg3:
+    st.session_state.tc_usd = st.number_input(
+        "Tipo de Cambio USD/MXN",
+        min_value=10.0,
+        value=float(st.session_state.tc_usd),
+        step=0.5,
+    )
+
+  st.markdown("---")
+  st.markdown("### 📋 Tabla Editable de Costos")
   df_editado = st.data_editor(
       st.session_state.catalogo_df,
       num_rows="dynamic",
@@ -442,40 +650,6 @@ elif menu == "📋 Catálogo de Costos":
       file_name="catalogo_costos_legado_verde.csv",
       mime="text/csv",
   )
-
-# ==========================================
-# VISTA 3: HISTÓRICO Y CANALES
-# ==========================================
-elif menu == "📈 Histórico y Canales":
-  st.subheader("📈 Registro Histórico Consolidado (Julio - Octubre 2026)")
-  st.markdown(
-      "Información de transacciones por plataforma, excluyendo cancelaciones y"
-      " segregando pedidos en camino."
-  )
-
-  st.dataframe(st.session_state.historico_df, use_container_width=True)
-
-  st.markdown("---")
-  st.subheader("🌐 Ventas Acumuladas por Canal")
-
-  df_canales = (
-      st.session_state.historico_df.groupby("Canal")["Ventas Producto"]
-      .sum()
-      .reset_index()
-  )
-  fig_c = go.Figure(
-      data=[
-          go.Bar(
-              x=df_canales["Canal"],
-              y=df_canales["Ventas Producto"],
-              marker_color=["#2d6a4f", "#40916c", "#52b788"],
-          )
-      ]
-  )
-  fig_c.update_layout(
-      height=350, margin=dict(t=20, b=20, l=20, r=20), yaxis_title="MXN"
-  )
-  st.plotly_chart(fig_c, use_container_width=True)
 
 # ==========================================
 # VISTA 4: SIMULADOR DE ESCENARIOS
