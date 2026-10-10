@@ -3,13 +3,15 @@ import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
 
+# ==========================================
+# CONFIGURACIÓN DE PÁGINA Y ESTILO VISUAL
+# ==========================================
 st.set_page_config(
-    page_title="Legado Verde - Catálogo de Costos & Finanzas",
+    page_title="Legado Verde - Tablero Financiero Unificado",
     page_icon="🌱",
     layout="wide",
 )
 
-# Estilo visual corporativo (Verde profundo, oliva, beige)
 st.markdown(
     """
     <style>
@@ -20,15 +22,15 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-st.title("🌱 Legado Verde: Catálogo de Costos y Formación de Precios")
+st.title("🌱 Legado Verde: Sistema Financiero Inteligente")
 st.markdown(
-    "*Módulo dinámico para la gestión de costos de producción, gastos fijos,"
-    " márgenes y punto de equilibrio.*"
+    "*Plataforma unificada: Histórico de operaciones, catálogo de costos dinámico"
+    " y análisis de rentabilidad.*"
 )
 st.markdown("---")
 
 # ==========================================
-# INICIALIZACIÓN DE ESTADO (PERSISTENCIA SESIÓN)
+# INICIALIZACIÓN DE ESTADO (PERSISTENCIA)
 # ==========================================
 if "tc_usd" not in st.session_state:
   st.session_state.tc_usd = 20.00
@@ -36,12 +38,10 @@ if "tc_usd" not in st.session_state:
 if "vol_prod" not in st.session_state:
   st.session_state.vol_prod = 1000
 
-if "sobres_caja" not in st.session_state:
-  st.session_state.sobres_caja = 50
-
 if "precio_venta" not in st.session_state:
   st.session_state.precio_venta = 60.00
 
+# Catálogo Editable de Costos (Nueva App)
 if "catalogo_df" not in st.session_state:
   datos_iniciales = [
       {
@@ -85,7 +85,7 @@ if "catalogo_df" not in st.session_state:
           "Estado": "Confirmado",
       },
       {
-          "Concepto": "Cajas de empaque ($11/caja)",
+          "Concepto": "Cajas de empaque ($11/caja, 50 sobres)",
           "Área": "Logística",
           "Clasificación": "Variable",
           "Importe Base": 0.22,
@@ -175,7 +175,7 @@ if "catalogo_df" not in st.session_state:
           "Estado": "Estimado",
       },
       {
-          "Concepto": "Shopify ($200 USD/año)",
+          "Concepto": "Shopify ($200 USD/año prorrateado)",
           "Área": "Ventas",
           "Clasificación": "Fijo",
           "Importe Base": 333.33,
@@ -187,12 +187,72 @@ if "catalogo_df" not in st.session_state:
   ]
   st.session_state.catalogo_df = pd.DataFrame(datos_iniciales)
 
+# Datos Históricos (App Anterior)
+if "historico_df" not in st.session_state:
+  data_hist = [
+      {
+          "Mes": "Julio 2026",
+          "Canal": "Mercado Libre",
+          "Ventas Producto": 1341.0,
+          "Remanente Reportado": 450.90,
+          "Estado": "Validado",
+      },
+      {
+          "Mes": "Agosto 2026",
+          "Canal": "Mercado Libre",
+          "Ventas Producto": 1044.0,
+          "Remanente Reportado": 538.88,
+          "Estado": "Validado",
+      },
+      {
+          "Mes": "Septiembre 2026",
+          "Canal": "Mercado Libre",
+          "Ventas Producto": 1342.0,
+          "Remanente Reportado": 873.92,
+          "Estado": "Validado",
+      },
+      {
+          "Mes": "Octubre 2026 (Parcial)",
+          "Canal": "Mercado Libre",
+          "Ventas Producto": 895.0,
+          "Remanente Reportado": 638.40,
+          "Estado": "Parcial / En Camino",
+      },
+      {
+          "Mes": "Julio - Sept 2026",
+          "Canal": "Amazon",
+          "Ventas Producto": 420.0,
+          "Remanente Reportado": -75.67,
+          "Estado": "Resumen Global",
+      },
+      {
+          "Mes": "Pendiente de Fechar",
+          "Canal": "Cafeterías",
+          "Ventas Producto": 15000.0,
+          "Remanente Reportado": 15000.0,
+          "Estado": "Pendiente Fechas",
+      },
+  ]
+  st.session_state.historico_df = pd.DataFrame(data_hist)
+
 # ==========================================
-# BARRA LATERAL: PARÁMETROS OPERATIVOS
+# BARRA LATERAL: NAVEGACIÓN Y PARÁMETROS
 # ==========================================
-st.sidebar.header("🎛️ Configuración General")
+st.sidebar.header("🎛️ Panel de Control")
+menu = st.sidebar.radio(
+    "Selecciona una sección:",
+    [
+        "📊 Resumen Ejecutivo",
+        "📋 Catálogo de Costos",
+        "📈 Histórico y Canales",
+        "🔮 Simulador de Escenarios",
+    ],
+)
+
+st.sidebar.markdown("---")
+st.sidebar.subheader("Parámetros Globales")
 st.session_state.precio_venta = st.sidebar.number_input(
-    "Precio de Venta Promedio ($)",
+    "Precio Venta Promedio ($)",
     min_value=1.0,
     value=float(st.session_state.precio_venta),
     step=1.0,
@@ -203,62 +263,21 @@ st.session_state.vol_prod = st.sidebar.number_input(
     value=int(st.session_state.vol_prod),
     step=50,
 )
-st.session_state.sobres_caja = st.sidebar.number_input(
-    "Sobres por Caja de Empaque",
-    min_value=1,
-    value=int(st.session_state.sobres_caja),
-    step=5,
-)
 st.session_state.tc_usd = st.sidebar.number_input(
-    "Tipo de Cambio (USD a MXN)",
+    "Tipo de Cambio USD/MXN",
     min_value=10.0,
     value=float(st.session_state.tc_usd),
     step=0.5,
 )
 
-st.sidebar.markdown("---")
-if st.sidebar.button("🔄 Restablecer Catálogo Original"):
-  st.session_state.pop("catalogo_df")
-  st.rerun()
-
 # ==========================================
-# CATÁLOGO EDITABLE DE COSTOS
-# ==========================================
-st.subheader("📋 Catálogo Interactivo de Costos y Gastos")
-st.markdown(
-    "Edita directamente las celdas de la tabla para actualizar la estructura"
-    " financiera en tiempo real:"
-)
-
-df_editado = st.data_editor(
-    st.session_state.catalogo_df,
-    num_rows="dynamic",
-    use_container_width=True,
-    column_config={
-        "Importe Base": st.column_config.NumberColumn(
-            "Importe Base", format="$%.2f"
-        ),
-        "Moneda": st.column_config.SelectboxColumn("Moneda", options=["MXN", "USD"]),
-        "Clasificación": st.column_config.SelectboxColumn(
-            "Clasificación", options=["Fijo", "Variable"]
-        ),
-        "Frecuencia": st.column_config.SelectboxColumn(
-            "Frecuencia", options=["Mensual", "Por sobre", "Anual"]
-        ),
-        "Estado": st.column_config.SelectboxColumn(
-            "Estado", options=["Confirmado", "Estimado", "Pendiente"]
-        ),
-    },
-)
-st.session_state.catalogo_df = df_editado
-
-# ==========================================
-# CÁLCULOS DINÁMICOS
+# CÁLCULOS AUTOMÁTICOS DESDE EL CATÁLOGO
 # ==========================================
 cv_unitario_total = 0.0
 cf_mensual_total = 0.0
 
-for _, row in df_editado.iterrows():
+df_cat = st.session_state.catalogo_df
+for _, row in df_cat.iterrows():
   importe = float(row["Importe Base"])
   if row["Moneda"] == "USD":
     importe *= st.session_state.tc_usd
@@ -274,7 +293,6 @@ for _, row in df_editado.iterrows():
     elif row["Frecuencia"] == "Anual":
       cf_mensual_total += importe / 12.0
 
-# Métricas Principales
 contribucion_unitaria = st.session_state.precio_venta - cv_unitario_total
 margen_contribucion_pct = (
     (contribucion_unitaria / st.session_state.precio_venta)
@@ -293,78 +311,211 @@ pe_pesos = (
     else 0
 )
 
+# Ventas totales registradas históricamente (excluyendo pendientes o sumando según criterio)
+ventas_historicas_totales = st.session_state.historico_df[
+    st.session_state.historico_df["Estado"] != "Pendiente Fechas"
+]["Ventas Producto"].sum()
+
 # ==========================================
-# VISTA DE RESULTADOS Y KPIS
+# VISTA 1: RESUMEN EJECUTIVO
 # ==========================================
-st.markdown("---")
-st.subheader("📊 Indicadores Financieros Calculados")
+if menu == "📊 Resumen Ejecutivo":
+  st.subheader("📊 Resumen Ejecutivo & Estado Operativo")
 
-c1, c2, c3, c4 = st.columns(4)
-c1.metric("Costo Variable Unitario", f"${cv_unitario_total:,.2f}")
-c2.metric("Costos Fijos Mensuales", f"${cf_mensual_total:,.2f}")
-c3.metric(
-    "Contribución Unitaria",
-    f"${contribucion_unitaria:,.2f}",
-    f"{margen_contribucion_pct*100:.1f}% Margen",
-)
-c4.metric(
-    "Punto de Equilibrio", f"{pe_unidades:,} sobres", f"${pe_pesos:,.2f} MXN"
-)
+  col1, col2, col3, col4, col5 = st.columns(5)
+  col1.metric("Ventas Históricas", f"${ventas_historicas_totales:,.2f}")
+  col2.metric("Costo Variable Unit.", f"${cv_unitario_total:,.2f}")
+  col3.metric("Gastos Fijos Mensuales", f"${cf_mensual_total:,.2f}")
+  col4.metric(
+      "Punto de Equilibrio",
+      f"{pe_unidades:,} sobres",
+      f"${pe_pesos:,.2f} MXN",
+  )
+  col5.metric(
+      "Margen Contribución",
+      f"{margen_contribucion_pct*100:.1f}%",
+      f"${contribucion_unitaria:,.2f} u.",
+  )
 
-# Gráfica de Punto de Equilibrio
-st.markdown("---")
-st.subheader("📈 Gráfica de Punto de Equilibrio")
+  st.markdown("---")
 
-rango_unidades = np.linspace(0, max(pe_unidades * 2, 2000), 100)
-ventas_linea = rango_unidades * st.session_state.precio_venta
-costos_totales_linea = cf_mensual_total + (rango_unidades * cv_unitario_total)
-
-fig_pe = go.Figure()
-fig_pe.add_trace(
-    go.Scatter(
-        x=rango_unidades,
-        y=ventas_linea,
-        mode="lines",
-        name="Ventas Totales",
-        line=dict(color="#2d6a4f", width=3),
+  col_g1, col_g2 = st.columns(2)
+  with col_g1:
+    st.subheader("⚖️ Estructura de Costos y Margen")
+    fig_est = go.Figure(
+        data=[
+            go.Pie(
+                labels=[
+                    "Costos Fijos Asignados",
+                    "Costos Variables Totales",
+                    "Margen de Contribución",
+                ],
+                values=[
+                    cf_mensual_total,
+                    cv_unitario_total * st.session_state.vol_prod,
+                    max(0, contribucion_unitaria * st.session_state.vol_prod),
+                ],
+                hole=0.4,
+                marker_colors=["#1b4332", "#2d6a4f", "#95d5b2"],
+            )
+        ]
     )
-)
-fig_pe.add_trace(
-    go.Scatter(
-        x=rango_unidades,
-        y=costos_totales_linea,
-        mode="lines",
-        name="Costos Totales",
-        line=dict(color="#d90429", width=3),
-    )
-)
-fig_pe.add_trace(
-    go.Scatter(
-        x=[pe_unidades],
-        y=[pe_pesos],
-        mode="markers+text",
-        name="Punto de Equilibrio",
-        text=[f"Equilibrio: {pe_unidades} un."],
-        textposition="top left",
-        marker=dict(size=12, color="#ffb703"),
-    )
-)
+    fig_est.update_layout(height=320, margin=dict(t=20, b=20, l=20, r=20))
+    st.plotly_chart(fig_est, use_container_width=True)
 
-fig_pe.update_layout(
-    xaxis_title="Sobres Vendidos",
-    yaxis_title="Pesos ($ MXN)",
-    height=400,
-    paper_bgcolor="rgba(0,0,0,0)",
-    plot_bgcolor="rgba(0,0,0,0)",
-)
-st.plotly_chart(fig_pe, use_container_width=True)
+  with col_g2:
+    st.subheader("📈 Gráfica de Punto de Equilibrio Dinámica")
+    rango_u = np.linspace(0, max(pe_unidades * 2, 1500), 100)
+    v_linea = rango_u * st.session_state.precio_venta
+    c_linea = cf_mensual_total + (rango_u * cv_unitario_total)
 
-# Exportación y Resguardo
-st.markdown("---")
-csv_data = df_editado.to_csv(index=False).encode("utf-8")
-st.download_button(
-    "📥 Exportar Catálogo de Costos (CSV)",
-    data=csv_data,
-    file_name="catalogo_costos_legado_verde.csv",
-    mime="text/csv",
-)
+    fig_pe = go.Figure()
+    fig_pe.add_trace(
+        go.Scatter(
+            x=rango_u,
+            y=v_linea,
+            name="Ventas Totales",
+            line=dict(color="#2d6a4f", width=3),
+        )
+    )
+    fig_pe.add_trace(
+        go.Scatter(
+            x=rango_u,
+            y=c_linea,
+            name="Costos Totales",
+            line=dict(color="#d90429", width=3),
+        )
+    )
+    fig_pe.add_trace(
+        go.Scatter(
+            x=[pe_unidades],
+            y=[pe_pesos],
+            name="Equilibrio",
+            marker=dict(size=12, color="#ffb703"),
+        )
+    )
+    fig_pe.update_layout(
+        height=320,
+        margin=dict(t=20, b=20, l=20, r=20),
+        xaxis_title="Sobres",
+        yaxis_title="MXN",
+    )
+    st.plotly_chart(fig_pe, use_container_width=True)
+
+# ==========================================
+# VISTA 2: CATÁLOGO DE COSTOS
+# ==========================================
+elif menu == "📋 Catálogo de Costos":
+  st.subheader("📋 Catálogo Interactivo de Costos y Formación de Precios")
+  st.markdown(
+      "Modifica los valores directamente en la tabla. Los cambios actualizarán"
+      " instantáneamente los cálculos financieros."
+  )
+
+  df_editado = st.data_editor(
+      st.session_state.catalogo_df,
+      num_rows="dynamic",
+      use_container_width=True,
+      column_config={
+          "Importe Base": st.column_config.NumberColumn(
+              "Importe Base", format="$%.2f"
+          ),
+          "Moneda": st.column_config.SelectboxColumn("Moneda", options=["MXN", "USD"]),
+          "Clasificación": st.column_config.SelectboxColumn(
+              "Clasificación", options=["Fijo", "Variable"]
+          ),
+          "Frecuencia": st.column_config.SelectboxColumn(
+              "Frecuencia", options=["Mensual", "Por sobre", "Anual"]
+          ),
+          "Estado": st.column_config.SelectboxColumn(
+              "Estado", options=["Confirmado", "Estimado", "Pendiente"]
+          ),
+      },
+  )
+  st.session_state.catalogo_df = df_editado
+
+  st.markdown("---")
+  csv_bytes = df_editado.to_csv(index=False).encode("utf-8")
+  st.download_button(
+      "📥 Exportar Catálogo de Costos (CSV)",
+      data=csv_bytes,
+      file_name="catalogo_costos_legado_verde.csv",
+      mime="text/csv",
+  )
+
+# ==========================================
+# VISTA 3: HISTÓRICO Y CANALES
+# ==========================================
+elif menu == "📈 Histórico y Canales":
+  st.subheader("📈 Registro Histórico Consolidado (Julio - Octubre 2026)")
+  st.markdown(
+      "Información de transacciones por plataforma, excluyendo cancelaciones y"
+      " segregando pedidos en camino."
+  )
+
+  st.dataframe(st.session_state.historico_df, use_container_width=True)
+
+  st.markdown("---")
+  st.subheader("🌐 Ventas Acumuladas por Canal")
+
+  df_canales = (
+      st.session_state.historico_df.groupby("Canal")["Ventas Producto"]
+      .sum()
+      .reset_index()
+  )
+  fig_c = go.Figure(
+      data=[
+          go.Bar(
+              x=df_canales["Canal"],
+              y=df_canales["Ventas Producto"],
+              marker_color=["#2d6a4f", "#40916c", "#52b788"],
+          )
+      ]
+  )
+  fig_c.update_layout(
+      height=350, margin=dict(t=20, b=20, l=20, r=20), yaxis_title="MXN"
+  )
+  st.plotly_chart(fig_c, use_container_width=True)
+
+# ==========================================
+# VISTA 4: SIMULADOR DE ESCENARIOS
+# ==========================================
+elif menu == "🔮 Simulador de Escenarios":
+  st.subheader("🔮 Simulador Financiero Proforma")
+
+  escenario = st.selectbox(
+      "Selecciona un escenario de proyección:",
+      [
+          "Base (Volumen actual)",
+          "Conservador (Ventas -15%)",
+          "Optimista (Ventas +20%)",
+      ],
+  )
+
+  mult = 1.0
+  if "Conservador" in escenario:
+    mult = 0.85
+  elif "Optimista" in escenario:
+    mult = 1.20
+
+  vol_proy = int(st.session_state.vol_prod * mult)
+  ventas_proy = vol_proy * st.session_state.precio_venta
+  costos_var_proy = vol_proy * cv_unitario_total
+  costos_tot_proy = cf_mensual_total + costos_var_proy
+  utilidad_proy = ventas_proy - costos_tot_proy
+
+  sc1, sc2, sc3, sc4 = st.columns(4)
+  sc1.metric("Volumen Proyectado", f"{vol_proy:,} sobres")
+  sc2.metric("Ventas Proyectadas", f"${ventas_proy:,.2f}")
+  sc3.metric("Costos Totales", f"${costos_tot_proy:,.2f}")
+  sc4.metric(
+      "Utilidad Neta Operativa",
+      f"${utilidad_proy:,.2f}",
+      f"{(utilidad_proy/ventas_proy*100) if ventas_proy>0 else 0:.1f}%",
+  )
+
+  st.markdown("---")
+  st.success(
+      "✨ El simulador utiliza en tiempo real los costos definidos en el"
+      " catálogo interactivo."
+  )
