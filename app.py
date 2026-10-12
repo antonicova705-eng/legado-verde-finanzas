@@ -13,29 +13,12 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-# Estilos CSS basados en la paleta oficial del logo
 st.markdown(
     """
     <style>
-    /* Fondo principal Beige Institucional */
-    .stApp {
-        background-color: #F4F0EA;
-    }
-    
-    /* Encabezados y títulos en Verde Bosque */
-    h1, h2, h3, .stSubheader {
-        color: #0B5127 !important;
-        font-family: 'Georgia', serif;
-        font-weight: 700;
-    }
-    
-    /* Tarjetas de métricas estilizadas */
-    [data-testid="stMetricValue"] {
-        color: #0B5127 !important;
-        font-size: 1.8rem !important;
-        font-weight: bold;
-    }
-    
+    .stApp { background-color: #F4F0EA; }
+    h1, h2, h3, .stSubheader { color: #0B5127 !important; font-family: 'Georgia', serif; font-weight: 700; }
+    [data-testid="stMetricValue"] { color: #0B5127 !important; font-size: 1.8rem !important; font-weight: bold; }
     div[data-testid="metric-container"] {
         background-color: #FFFFFF;
         padding: 15px 20px;
@@ -43,8 +26,6 @@ st.markdown(
         box-shadow: 0 4px 10px rgba(11, 81, 39, 0.08);
         border-left: 6px solid #8EB712;
     }
-    
-    /* Botones con estilo institucional */
     .stButton>button {
         background-color: #0B5127 !important;
         color: #FFFFFF !important;
@@ -52,20 +33,9 @@ st.markdown(
         border: none !important;
         padding: 10px 20px !important;
         font-weight: bold !important;
-        transition: all 0.3s ease;
     }
-    
-    .stButton>button:hover {
-        background-color: #8EB712 !important;
-        color: #FFFFFF !important;
-        box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-    }
-
-    /* Modificación de la barra lateral */
-    section[data-testid="stSidebar"] {
-        background-color: #EFE9E0;
-        border-right: 1px solid #DCD5C9;
-    }
+    .stButton>button:hover { background-color: #8EB712 !important; color: #FFFFFF !important; }
+    section[data-testid="stSidebar"] { background-color: #EFE9E0; border-right: 1px solid #DCD5C9; }
     </style>
 """,
     unsafe_allow_html=True,
@@ -88,7 +58,7 @@ st.markdown(
 st.markdown("---")
 
 # ==========================================
-# INICIALIZACIÓN DE ESTADO (PERSISTENCIA)
+# INICIALIZACIÓN DE ESTADO (PERSISTENCIA SEGURA)
 # ==========================================
 if "tc_usd" not in st.session_state:
   st.session_state.tc_usd = 20.00
@@ -101,7 +71,7 @@ if "precio_venta" not in st.session_state:
 
 # Catálogo Editable de Costos
 if "catalogo_df" not in st.session_state:
-  datos_iniciales = [
+  st.session_state.catalogo_df = pd.DataFrame([
       {
           "Concepto": "Aguacates",
           "Área": "Producción",
@@ -242,12 +212,11 @@ if "catalogo_df" not in st.session_state:
           "Base Asignación": "Mes",
           "Estado": "Confirmado",
       },
-  ]
-  st.session_state.catalogo_df = pd.DataFrame(datos_iniciales)
+  ])
 
-# Base de Operaciones / Ventas por Canal detalladas
+# Base de Operaciones / Ventas por Canal
 if "operaciones_df" not in st.session_state:
-  ops_iniciales = [
+  st.session_state.operaciones_df = pd.DataFrame([
       {
           "ID": "ML-001",
           "Mes": "Julio 2026",
@@ -338,8 +307,7 @@ if "operaciones_df" not in st.session_state:
           "Ajustes": 0.0,
           "Estado": "Entregado",
       },
-  ]
-  st.session_state.operaciones_df = pd.DataFrame(ops_iniciales)
+  ])
 
 # ==========================================
 # BARRA LATERAL: NAVEGACIÓN
