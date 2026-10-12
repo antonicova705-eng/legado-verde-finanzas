@@ -3,9 +3,7 @@ import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
 
-# ==========================================
-# CONFIGURACIÓN DE PÁGINA Y BRANDING CSS
-# ==========================================
+# Configuración de página
 st.set_page_config(
     page_title="Legado Verde - Sistema Financiero",
     page_icon="🥑",
@@ -13,6 +11,7 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
+# Estilos CSS institucionales
 st.markdown(
     """
     <style>
@@ -41,9 +40,7 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# ==========================================
-# LOGO Y ENCABEZADO
-# ==========================================
+# Sidebar y Logo
 st.sidebar.image(
     "https://drive.google.com/thumbnail?id=1j9PfF082J_VzWP2bQURgQw8BVgeI3aK9&sz=w1000",
     use_container_width=True,
@@ -57,19 +54,14 @@ st.markdown(
 )
 st.markdown("---")
 
-# ==========================================
-# INICIALIZACIÓN DE ESTADO (PERSISTENCIA SEGURA)
-# ==========================================
+# Inicialización segura en Session State
 if "tc_usd" not in st.session_state:
   st.session_state.tc_usd = 20.00
-
 if "vol_prod" not in st.session_state:
   st.session_state.vol_prod = 1000
-
 if "precio_venta" not in st.session_state:
   st.session_state.precio_venta = 60.00
 
-# Catálogo Editable de Costos
 if "catalogo_df" not in st.session_state:
   st.session_state.catalogo_df = pd.DataFrame([
       {
@@ -214,7 +206,6 @@ if "catalogo_df" not in st.session_state:
       },
   ])
 
-# Base de Operaciones / Ventas por Canal
 if "operaciones_df" not in st.session_state:
   st.session_state.operaciones_df = pd.DataFrame([
       {
@@ -309,9 +300,7 @@ if "operaciones_df" not in st.session_state:
       },
   ])
 
-# ==========================================
-# BARRA LATERAL: NAVEGACIÓN
-# ==========================================
+# Navegación
 st.sidebar.markdown("### Módulos Gerenciales")
 menu = st.sidebar.radio(
     "Seleccione módulo:",
@@ -324,7 +313,7 @@ menu = st.sidebar.radio(
     label_visibility="collapsed",
 )
 
-# CÁLCULOS AUTOMÁTICOS DESDE EL CATÁLOGO
+# Cálculos financieros
 cv_unitario_total = 0.0
 cf_mensual_total = 0.0
 
@@ -333,7 +322,6 @@ for _, row in df_cat.iterrows():
   importe = float(row["Importe Base"])
   if row["Moneda"] == "USD":
     importe *= st.session_state.tc_usd
-
   if row["Clasificación"] == "Variable":
     if row["Frecuencia"] == "Mensual":
       cv_unitario_total += importe / st.session_state.vol_prod
@@ -351,7 +339,6 @@ margen_contribucion_pct = (
     if st.session_state.precio_venta > 0
     else 0
 )
-
 pe_unidades = (
     int(np.ceil(cf_mensual_total / contribucion_unitaria))
     if contribucion_unitaria > 0
@@ -363,14 +350,11 @@ pe_pesos = (
     else 0
 )
 
-# ==========================================
-# VISTA 1: RESUMEN EJECUTIVO
-# ==========================================
+# Vista 1: Resumen Ejecutivo
 if menu == "📊 Resumen Ejecutivo":
   st.subheader("📊 Resumen Ejecutivo & Indicadores Clave")
 
   col_f1, col_f2, col_f3 = st.columns([2, 2, 1])
-
   meses_disponibles = sorted(
       st.session_state.operaciones_df["Mes"].unique().tolist()
   )
@@ -387,12 +371,10 @@ if menu == "📊 Resumen Ejecutivo":
     meses_seleccionados = st.multiselect(
         "📅 Elegir meses", options=meses_disponibles, default=meses_disponibles
     )
-
   with col_f2:
     canal_seleccionado = st.selectbox(
         "🌐 Elegir canal", options=canales_disponibles, index=0
     )
-
   with col_f3:
     st.write("")
     st.write("")
@@ -402,7 +384,7 @@ if menu == "📊 Resumen Ejecutivo":
   txt_meses = (
       ", ".join(meses_seleccionados)
       if meses_seleccionados
-      else "Ningún mes seleccionado"
+      else "Ningún mes"
   )
   st.markdown(
       f"> **Selección activa:** `{txt_meses}` · **Canal:**"
@@ -419,9 +401,7 @@ if menu == "📊 Resumen Ejecutivo":
     df_ops = df_ops[df_ops["Canal"] == canal_seleccionado]
 
   if df_ops.empty:
-    st.warning(
-        "⚠️ No existen registros para la combinación de filtros seleccionada."
-    )
+    st.warning("⚠️ No existen registros para los filtros seleccionados.")
   else:
     ventas_filtradas = df_ops["Ventas Producto"].sum()
     remanente_filtrado = df_ops["Remanente"].sum()
@@ -463,7 +443,7 @@ if menu == "📊 Resumen Ejecutivo":
       st.plotly_chart(fig_c, use_container_width=True)
 
     with col_g2:
-      st.subheader("📈 Análisis de Punto de Equilibrio & Avance Actual")
+      st.subheader("📈 Punto de Equilibrio & Avance Actual")
       rango_u = np.linspace(
           0, max(pe_unidades * 2, unidades_filtradas * 1.5, 1500), 100
       )
@@ -487,7 +467,6 @@ if menu == "📊 Resumen Ejecutivo":
               line=dict(color="#d90429", width=3),
           )
       )
-      # Marcador de Punto de Equilibrio Teórico
       fig_pe.add_trace(
           go.Scatter(
               x=[pe_unidades],
@@ -496,7 +475,6 @@ if menu == "📊 Resumen Ejecutivo":
               marker=dict(size=12, color="#8EB712"),
           )
       )
-      # Marcador de Avance Actual basado en los filtros seleccionados
       fig_pe.add_trace(
           go.Scatter(
               x=[unidades_filtradas],
@@ -518,16 +496,9 @@ if menu == "📊 Resumen Ejecutivo":
       )
       st.plotly_chart(fig_pe, use_container_width=True)
 
-# ==========================================
-# VISTA 2: VENTAS POR CANAL
-# ==========================================
+# Vista 2: Ventas por Canal
 elif menu == "🌐 Ventas por Canal":
   st.subheader("🌐 Gestión y Detalle de Ventas por Canal")
-  st.markdown(
-      "Administración transaccional por plataforma y registros comerciales"
-      " directos."
-  )
-
   canal_sel = st.selectbox(
       "Filtrar vista por canal:",
       [
@@ -542,51 +513,42 @@ elif menu == "🌐 Ventas por Canal":
   df_view = st.session_state.operaciones_df
   if canal_sel != "Todos":
     df_view = df_view[df_view["Canal"] == canal_sel]
-
   st.dataframe(df_view, use_container_width=True)
 
   df_pendientes = st.session_state.operaciones_df[
       st.session_state.operaciones_df["Mes"] == "Pendiente de Fechar"
   ]
   if not df_pendientes.empty:
-    st.warning(
-        "⚠️ **Atención:** Registros sin fecha asignada (se excluyen de los"
-        " totales mensuales para evitar sesgos):"
-    )
+    st.warning("⚠️ **Registros sin fecha asignada:**")
     st.dataframe(df_pendientes, use_container_width=True)
 
   st.markdown("---")
   with st.expander("➕ Registrar Nueva Venta Manual"):
     with st.form("form_nueva_venta"):
-      f_col1, f_col2, f_col3 = st.columns(3)
-      with f_col1:
-        new_canal = st.selectbox(
+      fc1, fc2, fc3 = st.columns(3)
+      with fc1:
+        nc = st.selectbox(
             "Canal", ["Cafeterías", "Venta directa", "Otros canales"]
         )
-        new_ref = st.text_input("Referencia / Folio", "VENTA-001")
-      with f_col2:
-        new_mes = st.text_input(
-            "Mes y Año (ej. Octubre 2026)", "Octubre 2026"
-        )
-        new_prod = st.text_input("Producto", "Guacamole Liofilizado 40g")
-      with f_col3:
-        new_cant = st.number_input("Cantidad (Sobres)", min_value=1, value=50)
-        new_monto = st.number_input(
-            "Importe Venta Producto ($ MXN)", min_value=0.0, value=3000.0
-        )
+        nr = st.text_input("Referencia", "VENTA-001")
+      with fc2:
+        nm = st.text_input("Mes", "Octubre 2026")
+        npd = st.text_input("Producto", "Guacamole Liofilizado 40g")
+      with fc3:
+        ncan = st.number_input("Cantidad", min_value=1, value=50)
+        nmonto = st.number_input("Importe ($)", min_value=0.0, value=3000.0)
 
-      submitted = st.form_submit_button("Guardar Venta")
-      if submitted:
+      if st.form_submit_button("Guardar Venta"):
         nuevo_id = f"REG-{len(st.session_state.operaciones_df)+1}"
         nueva_fila = {
             "ID": nuevo_id,
-            "Mes": new_mes,
-            "Canal": new_canal,
-            "Referencia": new_ref,
-            "Producto": new_prod,
-            "Cantidad": new_cant,
-            "Ventas Producto": new_monto,
-            "Remanente": new_monto,
+            "Mes": nm,
+            "Canal": nc,
+            "Referencia": nr,
+            "Producto": npd,
+            "Cantidad": ncan,
+            "Ventas Producto": nmonto,
+            "Remanente": nmonto,
             "Ingresos Envío": 0.0,
             "Comisiones": 0.0,
             "Costos Logísticos": 0.0,
@@ -597,36 +559,24 @@ elif menu == "🌐 Ventas por Canal":
             [st.session_state.operaciones_df, pd.DataFrame([nueva_fila])],
             ignore_index=True,
         )
-        st.success("¡Venta registrada con éxito!")
+        st.success("¡Venta registrada!")
         st.rerun()
 
   st.markdown("---")
-  c_del1, c_del2 = st.columns([2, 1])
-  with c_del1:
-    id_a_cancelar = st.selectbox(
-        "Seleccionar ID para cancelar:",
-        st.session_state.operaciones_df["ID"].tolist(),
-    )
-  with c_del2:
-    st.write("")
-    st.write("")
-    if st.button("Marcar como Cancelado"):
-      st.session_state.operaciones_df.loc[
-          st.session_state.operaciones_df["ID"] == id_a_cancelar, "Estado"
-      ] = "Cancelado"
-      st.success(f"Operación {id_a_cancelar} cancelada con trazabilidad.")
-      st.rerun()
+  id_canc = st.selectbox(
+      "Seleccionar ID para cancelar:",
+      st.session_state.operaciones_df["ID"].tolist(),
+  )
+  if st.button("Marcar como Cancelado"):
+    st.session_state.operaciones_df.loc[
+        st.session_state.operaciones_df["ID"] == id_canc, "Estado"
+    ] = "Cancelado"
+    st.success(f"Operación {id_canc} cancelada.")
+    st.rerun()
 
-# ==========================================
-# VISTA 3: CATÁLOGO DE COSTOS & CONFIGURACIÓN
-# ==========================================
+# Vista 3: Catálogo de Costos & Configuración
 elif menu == "📋 Catálogo de Costos & Configuración":
   st.subheader("📋 Catálogo Interactivo de Costos y Parámetros Globales")
-  st.markdown(
-      "Modifica los supuestos globales y la estructura detallada de costos."
-  )
-
-  st.markdown("### ⚙️ Parámetros Globales")
   cg1, cg2, cg3 = st.columns(3)
   with cg1:
     st.session_state.precio_venta = st.number_input(
@@ -637,7 +587,7 @@ elif menu == "📋 Catálogo de Costos & Configuración":
     )
   with cg2:
     st.session_state.vol_prod = st.number_input(
-        "Volumen Producción Mensual (Sobres)",
+        "Volumen Producción Mensual",
         min_value=1,
         value=int(st.session_state.vol_prod),
         step=50,
@@ -651,8 +601,7 @@ elif menu == "📋 Catálogo de Costos & Configuración":
     )
 
   st.markdown("---")
-  st.markdown("### 📋 Tabla Editable de Costos")
-  df_editado = st.data_editor(
+  st.session_state.catalogo_df = st.data_editor(
       st.session_state.catalogo_df,
       num_rows="dynamic",
       use_container_width=True,
@@ -672,10 +621,9 @@ elif menu == "📋 Catálogo de Costos & Configuración":
           ),
       },
   )
-  st.session_state.catalogo_df = df_editado
 
   st.markdown("---")
-  csv_bytes = df_editado.to_csv(index=False).encode("utf-8")
+  csv_bytes = st.session_state.catalogo_df.to_csv(index=False).encode("utf-8")
   st.download_button(
       "📥 Exportar Catálogo de Costos (CSV)",
       data=csv_bytes,
@@ -683,16 +631,9 @@ elif menu == "📋 Catálogo de Costos & Configuración":
       mime="text/csv",
   )
 
-# ==========================================
-# VISTA 4: SIMULADOR DE ESCENARIOS
-# ==========================================
+# Vista 4: Simulador de Escenarios
 elif menu == "🔮 Simulador de Escenarios":
   st.subheader("🔮 Simulador Financiero Proforma")
-  st.markdown(
-      "Evalúa el comportamiento operativo bajo diferentes supuestos de volumen"
-      " de ventas."
-  )
-
   escenario = st.selectbox(
       "Selecciona un escenario:",
       [
@@ -701,12 +642,11 @@ elif menu == "🔮 Simulador de Escenarios":
           "Optimista (Ventas +20%)",
       ],
   )
-
-  mult = 1.0
-  if "Conservador" in escenario:
-    mult = 0.85
-  elif "Optimista" in escenario:
-    mult = 1.20
+  mult = (
+      0.85
+      if "Conservador" in escenario
+      else (1.20 if "Optimista" in escenario else 1.0)
+  )
 
   vol_proy = int(st.session_state.vol_prod * mult)
   ventas_proy = vol_proy * st.session_state.precio_venta
@@ -723,9 +663,5 @@ elif menu == "🔮 Simulador de Escenarios":
       f"${utilidad_proy:,.2f}",
       f"{(utilidad_proy/ventas_proy*100) if ventas_proy>0 else 0:.1f}%",
   )
-
   st.markdown("---")
-  st.success(
-      "✨ El simulador se alimenta automáticamente de los costos configurados"
-      " en tiempo real."
-  )
+  st.success("✨ Simulador conectado en tiempo real.")
