@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="es-MX">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0B5127">
+<title>Legado Verde · Finanzas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+<header class="barra">
+  <div class="barra__in">
+    <a class="marca" href="/" aria-label="Legado Verde, inicio">
+      <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M12 2C7 5 4 9 4 13.5A8 8 0 0 0 12 22a8 8 0 0 0 8-8.5C20 9 17 5 12 2Z" fill="var(--acento)"/><circle cx="12" cy="14.5" r="3.2" fill="var(--lima)"/></svg>
+      <span>Legado Verde</span>
+    </a>
+    <nav class="segmento" role="tablist" aria-label="Periodo">
+      <button role="tab" data-periodo="hoy">Hoy</button>
+      <button role="tab" data-periodo="semana">7 días</button>
+      <button role="tab" data-periodo="mes" aria-selected="true">Mes</button>
+      <button role="tab" data-periodo="anio">Año</button>
+    </nav>
+    <div class="barra__der">
+      <span class="vivo" id="vivo" title="Conexión en tiempo real"><i></i><span>Conectando</span></span>
+      <button class="btn btn--primario" id="abrirCoche" type="button">
+        <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M5 11l1.5-4.5A2 2 0 0 1 8.4 5h7.2a2 2 0 0 1 1.9 1.5L19 11m-14 0h14v6H5v-6Zm2 6v2m10-2v2M8 14h.01M16 14h.01" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Modo coche
+      </button>
+    </div>
+  </div>
+</header>
+
+<main class="contenedor">
+  <section class="comando" aria-label="Asistente">
+    <form id="formComando" class="comando__caja" autocomplete="off">
+      <label for="entrada" class="sr">Pregunta o registra una venta</label>
+      <input id="entrada" name="entrada" type="text" placeholder="Pregunta o registra: “Agrega 15 sobres a Casa Monic por $1,000”" enterkeyhint="send">
+      <button type="button" class="icono" id="micTexto" aria-label="Dictar">
+        <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3Zm-7 9a7 7 0 0 0 14 0M12 19v2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+      </button>
+      <button type="submit" class="btn btn--primario">Enviar</button>
+    </form>
+    <div id="respuesta" class="respuesta" hidden>
+      <p id="respuestaTexto"></p>
+      <div id="pendienteAcciones" class="respuesta__acciones" hidden>
+        <button type="button" class="btn btn--primario" data-decir="Sí, confirmo">Confirmar</button>
+        <button type="button" class="btn" data-decir="No, cancela">Cancelar</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="kpis" aria-label="Indicadores">
+    <article class="kpi">
+      <header><span>Ventas de producto</span><em class="etiqueta">registrado</em></header>
+      <strong id="kVentas">—</strong>
+      <small id="kVentasSub">&nbsp;</small>
+    </article>
+    <article class="kpi">
+      <header><span>Sobres vendidos</span><em class="etiqueta">registrado</em></header>
+      <strong id="kSobres">—</strong>
+      <small id="kSobresSub">&nbsp;</small>
+    </article>
+    <article class="kpi">
+      <header><span>Contribución</span><em class="etiqueta etiqueta--est" id="kContribTipo">estimado</em></header>
+      <strong id="kContrib">—</strong>
+      <small>neto de canal menos costo de producto</small>
+    </article>
+    <article class="kpi kpi--pe">
+      <header><span>Punto de equilibrio · mes</span><em class="etiqueta etiqueta--est">estimado</em></header>
+      <strong id="kPE">—</strong>
+      <div class="progreso" role="progressbar" aria-valuemin="0" aria-valuemax="100" id="pePista"><i id="peBarra"></i></div>
+      <small id="kPESub">&nbsp;</small>
+    </article>
+  </section>
+
+  <section class="rejilla">
+    <article class="panel">
+      <header class="panel__cab"><h2>Canales</h2><span class="ayuda" id="canalesNota"></span></header>
+      <div id="canales" class="canales"><p class="vacio">Sin ventas en el periodo.</p></div>
+    </article>
+    <article class="panel">
+      <header class="panel__cab"><h2>Actividad</h2><span class="ayuda">en tiempo real</span></header>
+      <ol id="feed" class="feed"><li class="vacio">Todavía no hay ventas registradas.</li></ol>
+    </article>
+  </section>
+
+  <p class="pie">Los indicadores marcados como <em class="etiqueta etiqueta--est">estimado</em> usan el costo variable y los costos fijos del catálogo hasta que se confirme el costo real. Contribución no es utilidad ni flujo de efectivo.</p>
+</main>
+
+<!-- Modo coche: pantalla completa, sin lectura obligatoria. -->
+<div id="coche" class="coche" hidden role="dialog" aria-modal="true" aria-label="Modo coche">
+  <button class="coche__salir" id="cerrarCoche" type="button">Salir</button>
+  <p class="coche__estado" id="cocheEstado">Toca para hablar</p>
+  <button class="coche__mic" id="cocheMic" type="button" aria-label="Hablar">
+    <svg viewBox="0 0 24 24" width="72" height="72" aria-hidden="true"><path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3Zm-7 9a7 7 0 0 0 14 0M12 19v2" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+  </button>
+  <p class="coche__oido" id="cocheOido">&nbsp;</p>
+  <p class="coche__resp" id="cocheResp">Pregunta “¿cómo van las ventas de Mercado Libre?” o dicta una venta.</p>
+  <div class="coche__conf" id="cocheConf" hidden>
+    <button type="button" class="btn btn--primario btn--xl" data-decir="Sí, confirmo">Sí</button>
+    <button type="button" class="btn btn--xl" data-decir="No, cancela">No</button>
+  </div>
+</div>
+
+<dialog id="dlgToken" class="dialogo">
+  <form method="dialog" id="formToken">
+    <h2>Acceso</h2>
+    <p>Escribe el token de acceso configurado en el servidor (APP_TOKEN).</p>
+    <label for="token" class="sr">Token</label>
+    <input id="token" type="password" required autocomplete="current-password">
+    <div class="dialogo__acc"><button class="btn btn--primario" value="ok">Entrar</button></div>
+  </form>
+</dialog>
+
+<div id="aviso" class="aviso" role="status" aria-live="polite" hidden></div>
+<script src="/static/app.js" defer></script>
+</body>
+</html>

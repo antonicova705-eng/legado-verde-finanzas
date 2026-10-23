@@ -1,0 +1,29 @@
+# Blueprint de Render: crea la base Postgres y el servicio web con un clic (New → Blueprint).
+databases:
+  - name: legado-verde-db
+    plan: free
+    databaseName: legado_verde
+    user: legado
+
+services:
+  - type: web
+    name: legado-verde
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /api/salud
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: legado-verde-db
+          property: connectionString
+      - key: APP_TOKEN          # clave para entrar al tablero web
+        generateValue: true
+      - key: MCP_TOKEN          # clave del conector de Claude
+        generateValue: true
+      - key: IMPORTAR_HISTORICO_BASE
+        value: "true"
+      - key: SYNC_HABILITADO    # actívalo cuando conectes Mercado Libre o Amazon
+        value: "false"
+      - key: ANTHROPIC_API_KEY  # opcional: solo para el asistente dentro del tablero
+        sync: false
