@@ -5,7 +5,7 @@ import streamlit as st
 import json
 import os
 import copy
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 from pathlib import Path
 from uuid import uuid4
 from zoneinfo import ZoneInfo
@@ -13,6 +13,10 @@ from zoneinfo import ZoneInfo
 def hoy_local():
     return datetime.now(ZoneInfo("America/Mexico_City")).date()
 from motor import *
+import calendar
+import math
+import comercial as cm
+import vistas
 # ==========================================
 # CONFIGURACIÓN DE PÁGINA Y BRANDING CSS
 # ==========================================
@@ -364,6 +368,7 @@ if guardado is None:
         st.rerun()
 else:
     datos = guardado
+cm.asegurar_estructura(datos)  # tablas del flujo comercial e IA; no altera las existentes
 antes_ejecucion = copy.deepcopy(datos)
 st.session_state.operaciones_df = pd.DataFrame(datos['operaciones'])
 
@@ -453,10 +458,11 @@ def crecimiento():
     st.dataframe(pd.DataFrame(rows).drop(columns='Completo'),hide_index=True,width="stretch")
     st.caption('Un espacio vacío significa información desconocida. Las comparaciones porcentuales requieren dos meses completos; el mes actual siempre es parcial. No incluye ingresos por envío.')
 
-CANALES=['Mercado Libre','Amazon','Cafeterías','Venta directa','Otros canales']
+CANALES=['Mercado Libre','Amazon','Cafeterías','Tienda en línea (Shopify)','Venta directa','Otros canales']
 menu=st.sidebar.radio('Seleccione módulo:',[
     '📊 Resumen Ejecutivo','🌐 Ventas por Canal','📋 Catálogo de Costos & Configuración',
-    '🔮 Simulador de Escenarios','📑 Estados financieros'],label_visibility='collapsed')
+    '🔮 Simulador de Escenarios','📑 Estados financieros',
+    '📈 Histórico y margen por canal','🔄 Flujo comercial','🤖 Asistente IA'],label_visibility='collapsed')
 inicio,fin=periodo()
 if st.sidebar.button('🔄 Actualizar datos del servidor'):
     st.rerun()
@@ -699,6 +705,7 @@ elif menu == "🔮 Simulador de Escenarios":
       "✨ El simulador se alimenta automáticamente de los costos configurados"
       " en tiempo real."
   )
+  vistas.simulador_mezcla(datos, cv_unitario_total, cf_mensual_total, st.session_state.precio_venta)
 
 elif menu == '📑 Estados financieros':
     st.subheader('📑 Estados financieros')
@@ -882,6 +889,17 @@ elif menu == '📑 Estados financieros':
             for l in a['Líneas']:
                 export.append({'ID':a['ID'],'Fecha':a['Fecha'],'Tipo':a['Tipo'],**l})
         st.download_button('📥 Exportar libro contable CSV',pd.DataFrame(export).to_csv(index=False).encode('utf-8-sig'),'libro_contable.csv','text/csv')
+
+elif menu == '📈 Histórico y margen por canal':
+    vistas.vista_historico(datos, cv_unitario_total)
+
+elif menu == '🔄 Flujo comercial':
+    vistas.vista_flujo(datos, cv_unitario_total, st.session_state.precio_venta, CANALES,
+                       guardar_y_actualizar, hoy_local().isoformat())
+
+elif menu == '🤖 Asistente IA':
+    vistas.vista_ia(datos, vistas.contexto_ia(datos, cv_unitario_total, cf_mensual_total, st.session_state.precio_venta,
+                                              pe_unidades, pe_pesos, hoy_local().isoformat()), guardar_y_actualizar)
 
 # Persistir también edición del catálogo y parámetros sin perder el resto.
 if menu=='📋 Catálogo de Costos & Configuración':
