@@ -32,7 +32,7 @@ FORMATO = "legado-verde-ventas"
 
 CAMPOS = ["clave", "fecha", "canal", "referencia", "cliente", "producto", "sku", "presentacion", "sobres_por_presentacion",
           "presentaciones", "precio_presentacion", "descuento", "devolucion", "sobres_devueltos",
-          "envio", "comisiones", "logistica", "costo", "costo_confirmado", "estado", "notas",
+          "envio", "comisiones", "logistica", "costo", "costo_confirmado", "estado", "notas", "calidad",
           "cobro_fecha", "cobro_importe", "cobro_medio", "cobro_referencia"]
 
 
@@ -92,6 +92,8 @@ def _entrada(v: dict) -> dict:
         "costo_confirmado": _bool(v.get("costo_confirmado")) and not _vacio(costo),
         "estado": v.get("estado") or "Entregado", "notas": v.get("notas"),
         "origen": ORIGEN_IMPORTACION,
+        "calidad": v.get("calidad"),
+        "remanente": None if _vacio(v.get("remanente")) else v.get("remanente"),
     }
     if e["sobres_devueltos"] is None and not numero(v.get("devolucion") or 0):
         e["sobres_devueltos"] = 0  # sin dinero devuelto no hubo unidades devueltas
@@ -260,6 +262,7 @@ def _reconstruir_entrada(f: dict) -> dict:
         "logistica": v["Costos Logísticos"] if v["Logística confirmada"] else None,
         "costo": v["Costo de ventas"], "costo_confirmado": v["Costo confirmado"],
         "estado": v["Estado"], "notas": v.get("Notas"), "origen": v["Origen"], "clave": f["clave"],
+        "calidad": v.get("Calidad"), "remanente": v.get("Remanente"),
         # ID determinista: reintentos tras una caída producen el mismo ID.
         "id": "IMP-" + huella(f["clave"])[:12],
     }

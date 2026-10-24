@@ -200,6 +200,8 @@ def pendientes_de_venta(r: dict) -> list[str]:
         p.append("Liquidación de plataforma")
     if r.get("Ajustes"):
         p.append("Ajustes sin clasificar")
+    if r.get("Calidad") == "Estimada":
+        p.append("Verificar (estimada)")
     return p
 
 
@@ -292,6 +294,8 @@ def construir_venta(datos: dict, e: dict, anterior: dict | None = None) -> dict:
         "Esquema": ESQUEMA,
         "Modificado": ahora_iso(),
     })
+    if e.get("calidad"):
+        base["Calidad"] = e["calidad"]
     base.setdefault("Origen", e.get("origen") or ORIGEN_MANUAL)
     base.setdefault("Creado", ahora_iso())
     if e.get("clave") and not base.get("Clave"):

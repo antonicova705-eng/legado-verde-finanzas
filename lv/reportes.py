@@ -93,6 +93,8 @@ def pendientes(datos: dict, inicio: str, fin: str) -> list[dict]:
             "Los sobres netos vendidos no se calculan.")
     agregar("Liquidación de plataforma pendiente", [r["ID"] for r in periodo if r.get("Liquidación") == "Pendiente"],
             "Un pedido pagado no es un depósito: el efectivo se registra al conciliar la liquidación.")
+    agregar("Ventas estimadas por verificar", [r["ID"] for r in periodo if r.get("Calidad") == "Estimada"],
+            "Son reconstrucciones comprobables, no registros contemporáneos. Verifícalas con notas o transferencias.")
     agregar("Ajustes heredados sin clasificar", [r["ID"] for r in periodo if r.get("Ajustes")],
             "Requieren clasificación contable.")
     sin_ref = [a.get("Referencia") for a in datos.get("asientos", [])

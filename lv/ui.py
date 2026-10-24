@@ -29,7 +29,7 @@ html, body, .stApp, button, input, textarea, select, [data-testid="stMarkdownCon
   font-family: 'Manrope', system-ui, -apple-system, 'Segoe UI', sans-serif;
 }}
 .stApp {{ background: {FONDO}; color: {TINTA}; }}
-.block-container {{ padding-top: 2rem; max-width: 1260px; }}
+.block-container {{ padding-top: 3.6rem; max-width: 1260px; }}
 h1, h2, h3 {{ color: {TINTA} !important; letter-spacing: -0.02em; }}
 h1 {{ font-size: 1.9rem !important; font-weight: 800 !important; }}
 h3 {{ font-size: 1.08rem !important; font-weight: 700 !important; margin-top: .6rem !important; }}
@@ -39,9 +39,11 @@ section[data-testid="stSidebar"] {{ background: {NOCHE}; }}
 section[data-testid="stSidebar"] [data-testid="stImage"] img {{ border-radius: 14px; }}
 section[data-testid="stSidebar"] [role="radiogroup"] {{ gap: 2px; }}
 section[data-testid="stSidebar"] [role="radiogroup"] label {{
-  width: 100%; padding: 9px 12px; border-radius: 10px; margin: 0; cursor: pointer;
-  transition: background .15s ease; }}
-section[data-testid="stSidebar"] [role="radiogroup"] label > div:first-child {{ display: none; }}
+  display: flex !important; width: 100% !important; box-sizing: border-box; padding: 9px 12px;
+  border-radius: 10px; margin: 0; cursor: pointer; transition: background .15s ease; }}
+/* El círculo del radio es el único hijo directo sin texto */
+section[data-testid="stSidebar"] [role="radiogroup"] label > div:not(:has(p)) {{ display: none !important; }}
+section[data-testid="stSidebar"] [role="radiogroup"] label > div:has(p) {{ padding-left: 0 !important; margin-left: 0 !important; }}
 section[data-testid="stSidebar"] [role="radiogroup"] label:hover {{ background: rgba(255,255,255,.07); }}
 section[data-testid="stSidebar"] [role="radiogroup"] label:has(input:checked) {{
   background: rgba(166,209,43,.16); box-shadow: inset 3px 0 0 {LIMA}; }}
@@ -68,7 +70,7 @@ div[role="radiogroup"][aria-orientation="horizontal"] label {{ background: #fff;
   border-radius: 999px; padding: 4px 14px; }}
 div[role="radiogroup"][aria-orientation="horizontal"] label:has(input:checked) {{ background: {BOSQUE}; border-color: {BOSQUE}; }}
 div[role="radiogroup"][aria-orientation="horizontal"] label:has(input:checked) p {{ color: #fff; font-weight: 700; }}
-div[role="radiogroup"][aria-orientation="horizontal"] label > div:first-child {{ display: none; }}
+div[role="radiogroup"][aria-orientation="horizontal"] label > div:not(:has(p)) {{ display: none !important; }}
 
 /* Indicadores: tarjetas; la destacada en verde bosque */
 .kpis {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin: .3rem 0 1.1rem; }}
