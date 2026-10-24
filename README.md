@@ -15,6 +15,7 @@ Aplicación Streamlit para registrar ventas, cobros y gastos, y consultar result
 | `motor.py` | Sin cambios. Contabilidad y almacenamiento con control de versiones. |
 | `lv/` | Lógica nueva: modelo de venta, operaciones atómicas, importación, reportes, respaldos, integraciones. |
 | `registrar_venta.py` | Registra ventas desde un JSON/CSV con la misma lógica de la app (vista previa y `--confirmar`). |
+| `convertir_reportes.py` | Convierte los reportes descargados de Mercado Libre (Excel de ventas) y Amazon (transacciones CSV) al formato de importación. |
 | `sync_worker.py` | Proceso de sincronización con Mercado Libre y Amazon, independiente de Streamlit. |
 | `webhook_ml.py` | Receptor de notificaciones `orders_v2` de Mercado Libre. |
 | `tests/` | Pruebas automáticas contra el `motor.py` real. `tests/stubs/` simula Streamlit y Plotly solo para pruebas de humo. |

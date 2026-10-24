@@ -48,7 +48,7 @@ def main(argv=None) -> int:
         print("\nVista previa: no se escribió nada. Repite con --confirmar para registrar.")
         return 0
     aceptadas = {int(x) for x in a.aceptar_posibles_duplicados.split(",") if x.strip()}
-    salida = repo.transaccion(lambda d: importacion.aplicar(d, importacion.previsualizar(d, ventas), aceptadas))
+    salida = repo.transaccion(lambda d: importacion.aplicar(d, importacion.previsualizar(d, ventas), aceptadas, ventas))
     _, verif = repo.leer()
     print()
     for s in salida:

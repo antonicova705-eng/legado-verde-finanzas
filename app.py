@@ -569,7 +569,7 @@ def vista_importar():
         st.warning("Algunas ventas entran con costo pendiente: margen, EBITDA y utilidad del periodo se mostrarán como «No disponible» hasta confirmarlo.")
     conf = st.checkbox(f"Revisé la vista previa y quiero registrar {nuevas} venta(s)")
     if st.button("Importar ventas", type="primary", disabled=not conf):
-        res = ejecutar(lambda d: importacion.aplicar(d, importacion.previsualizar(d, ventas), aceptar), rerun=False)
+        res = ejecutar(lambda d: importacion.aplicar(d, importacion.previsualizar(d, ventas), aceptar, ventas), rerun=False)
         if res:
             _, verif = repo.leer()
             for s in res:

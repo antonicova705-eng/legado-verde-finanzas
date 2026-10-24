@@ -18,17 +18,19 @@ importado dos veces no duplica ventas ni cobros.
 """
 from __future__ import annotations
 
+import copy
 import csv
+import importlib
 import io
 import json
 
 from . import operaciones as op
-from .modelo import ORIGEN_IMPORTACION, canales, construir_venta, importes, presentaciones
+from .modelo import ORIGEN_IMPORTACION, canales, config_completa, construir_venta, importes, presentaciones
 from .util import huella, numero, resolver_fecha
 
 FORMATO = "legado-verde-ventas"
 
-CAMPOS = ["clave", "fecha", "canal", "referencia", "cliente", "producto", "sku", "presentacion",
+CAMPOS = ["clave", "fecha", "canal", "referencia", "cliente", "producto", "sku", "presentacion", "sobres_por_presentacion",
           "presentaciones", "precio_presentacion", "descuento", "devolucion", "sobres_devueltos",
           "envio", "comisiones", "logistica", "costo", "costo_confirmado", "estado", "notas",
           "cobro_fecha", "cobro_importe", "cobro_medio", "cobro_referencia"]
@@ -109,6 +111,16 @@ def previsualizar(datos: dict, ventas: list[dict]) -> list[dict]:
     resultado, claves_vistas = [], set()
     canales_validos = set(canales(datos, solo_activos=False))
     pres = presentaciones(datos)
+    try:
+        nuevas = presentaciones_nuevas(datos, ventas)
+    except (ValueError, TypeError) as ex:
+        return [{"Fila": 1, "Estado": "Error", "Mensajes": [str(ex)], "Pendientes": [], "venta": None,
+                 "cobro": None, "clave": None, "coincidencias": []}]
+    if nuevas:
+        datos = copy.deepcopy(datos)
+        datos["config"].setdefault("presentaciones", copy.deepcopy(config_completa(datos)["presentaciones"]))
+        datos["config"]["presentaciones"] += [{"Nombre": n, "Sobres": s} for n, s in nuevas.items()]
+        pres = presentaciones(datos)
     for i, v in enumerate(ventas, start=1):
         fila = {"Fila": i, "Estado": "Nueva", "Mensajes": [], "Pendientes": [], "venta": None,
                 "cobro": None, "clave": None, "coincidencias": []}
@@ -122,7 +134,10 @@ def previsualizar(datos: dict, ventas: list[dict]) -> list[dict]:
             if e["canal"] not in canales_validos:
                 raise ValueError(f"Canal desconocido: {e['canal']!r}.")
             if e["presentacion"] not in pres:
-                raise ValueError(f"Presentación no configurada: {e['presentacion']!r}.")
+                raise ValueError(f"Presentación no configurada: {e['presentacion']!r}. "
+                                 "Agrégala en Configuración o incluye «sobres_por_presentacion» en el archivo.")
+            if e["presentacion"] in nuevas:
+                fila["Mensajes"].append(f"Se creará la presentación «{e['presentacion']}» con {nuevas[e['presentacion']]} sobres.")
             clave = _clave(v, e)
             e["clave"] = clave
             fila["clave"] = clave
@@ -131,15 +146,14 @@ def previsualizar(datos: dict, ventas: list[dict]) -> list[dict]:
             claves_vistas.add(clave)
             venta = construir_venta(datos, e)
             fila["venta"] = venta
-            if venta["Referencia"]:
-                import importlib
-                importlib.import_module("motor").validar_venta({**venta, "ID": "__vista_previa__"}, datos["operaciones"])
-            else:
-                fila["Mensajes"].append("Sin folio: se generará uno interno (INT-…).")
             existente = op.por_clave(datos, clave)
             if existente:
                 fila["Estado"] = "Ya registrada"
                 fila["Mensajes"].append(f"Se omitirá: ya existe con ID {existente['ID']}.")
+            elif venta["Referencia"]:
+                importlib.import_module("motor").validar_venta({**venta, "ID": "__vista_previa__"}, datos["operaciones"])
+            else:
+                fila["Mensajes"].append("Sin folio: se generará uno interno (INT-…).")
             c = v.get("cobro")
             if c:
                 cf = resolver_fecha(c.get("fecha"))
@@ -180,9 +194,39 @@ def previsualizar(datos: dict, ventas: list[dict]) -> list[dict]:
     return resultado
 
 
-def aplicar(datos: dict, filas: list[dict], aceptar_posibles_duplicados: set[int] = frozenset()) -> list[dict]:
-    """Registra las filas «Nueva» (y las «Posible duplicado» aceptadas). Todo o nada."""
+def presentaciones_nuevas(datos: dict, ventas: list[dict]) -> dict[str, int]:
+    """Presentaciones que el archivo define y aún no existen. Error si contradicen una existente."""
+    pres = presentaciones(datos)
+    nuevas: dict[str, int] = {}
+    for v in ventas:
+        nombre = (v.get("presentacion") or "").strip()
+        if not nombre or _vacio(v.get("sobres_por_presentacion")):
+            continue
+        n = int(float(v["sobres_por_presentacion"]))
+        if n < 1:
+            raise ValueError(f"«{nombre}»: los sobres por presentación deben ser al menos 1.")
+        if nombre in pres and pres[nombre] != n:
+            raise ValueError(f"«{nombre}» ya existe con {pres[nombre]} sobres; el archivo dice {n}.")
+        if nombre in nuevas and nuevas[nombre] != n:
+            raise ValueError(f"«{nombre}» aparece con distinto número de sobres en el archivo.")
+        if nombre not in pres:
+            nuevas[nombre] = n
+    return nuevas
+
+
+def aplicar(datos: dict, filas: list[dict], aceptar_posibles_duplicados: set[int] = frozenset(),
+            ventas: list[dict] | None = None) -> list[dict]:
+    """Registra las filas «Nueva» (y las «Posible duplicado» aceptadas). Todo o nada.
+
+    Si el archivo define presentaciones nuevas (``ventas`` originales), se agregan a la configuración.
+    """
     salida = []
+    if ventas:
+        nuevas = presentaciones_nuevas(datos, ventas)
+        if nuevas:
+            importlib.import_module("motor").evento(datos, "Configuración", None, {"Presentaciones nuevas": nuevas})
+            datos["config"].setdefault("presentaciones", copy.deepcopy(config_completa(datos)["presentaciones"]))
+            datos["config"]["presentaciones"] += [{"Nombre": n, "Sobres": s} for n, s in nuevas.items()]
     for f in filas:
         if f["Estado"] == "Ya registrada":
             existente = op.por_clave(datos, f["clave"])
