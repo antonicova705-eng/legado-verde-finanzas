@@ -1,0 +1,17 @@
+# Conector de voz de Legado Verde para Claude. En Render: New → Blueprint → este repositorio (rama main).
+services:
+  - type: web
+    name: legado-verde-voz
+    runtime: python
+    plan: free
+    branch: main
+    buildCommand: pip install -r requirements-mcp.txt
+    startCommand: python servidor_mcp.py
+    healthCheckPath: /salud
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12.8"
+      - key: MCP_TOKEN          # clave del conector; Render la genera
+        generateValue: true
+      - key: DATABASE_URL       # la misma base de Neon que usa Streamlit; pégala en el panel de Render
+        sync: false

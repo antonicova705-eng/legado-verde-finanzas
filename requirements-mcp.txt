@@ -1,0 +1,4 @@
+# Solo para el conector de voz (servidor_mcp.py). No incluye Streamlit.
+mcp>=2.3,<3
+uvicorn>=0.30
+psycopg[binary]>=3.2

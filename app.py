@@ -281,7 +281,7 @@ def pagina_inicio():
 def tabla_ventas():
     c1, c2, c3, c4 = st.columns([1.2, 1.2, 1.2, 2])
     canal = c1.selectbox("Canal", ["Todos"] + canales(datos), key="tv_canal")
-    origen = c2.selectbox("Origen", ["Todos", "Captura manual", "Importación (Claude/archivo)", ORIGEN_ML, ORIGEN_AMZ,
+    origen = c2.selectbox("Origen", ["Todos", "Captura manual", "Voz (Claude)", "Importación (Claude/archivo)", ORIGEN_ML, ORIGEN_AMZ,
                                      "Heredado sin verificar"], key="tv_origen")
     estado = c3.selectbox("Estado", ["Activas", "Con pendientes", "Anuladas", "Todas"], key="tv_estado")
     buscar = c4.text_input("Buscar", placeholder="Folio, cliente, ID, pedido…", key="tv_buscar")
@@ -890,6 +890,12 @@ def config_parametros():
         precio = a.number_input("Precio de venta promedio por sobre", min_value=1.0, value=float(cfg["precio_venta"]), step=1.0)
         vol = b.number_input("Volumen de producción mensual (sobres)", min_value=1, value=int(cfg["vol_prod"]), step=50)
         tc = c.number_input("Tipo de cambio USD/MXN", min_value=10.0, value=float(cfg["tc_usd"]), step=0.5)
+        a, b = st.columns(2)
+        costo_def = cfg.get("costo_sobre")
+        sin_costo = a.checkbox("Aún no tengo un costo de producción por sobre confirmado", value=costo_def is None)
+        costo_sobre = b.number_input("Costo de producción por sobre (MXN)", min_value=0.0, value=float(costo_def or 0.0),
+                                     step=1.0, disabled=sin_costo,
+                                     help="Se usa como costo confirmado en ventas registradas por voz. Un paquete de 10 costará 10 veces este valor.")
         prioridad = st.radio("Si una venta sincronizada se editó a mano y la plataforma informa cambios",
                              ["Conservar mi edición y pedirme revisión", "La plataforma prevalece"],
                              index=0 if cfg.get("conciliacion", {}).get("prioridad", "manual") == "manual" else 1)
@@ -897,6 +903,7 @@ def config_parametros():
     if ok:
         def fn(d):
             nuevo = {**d["config"], "precio_venta": precio, "vol_prod": int(vol), "tc_usd": tc,
+                     "costo_sobre": None if sin_costo else float(costo_sobre),
                      "conciliacion": {"prioridad": "manual" if prioridad.startswith("Conservar") else "plataforma"}}
             M.costos_catalogo(d["catalogo"], tc, int(vol))
             if nuevo != d["config"]:
@@ -1075,13 +1082,19 @@ def config_respaldos():
 
 
 def config_almacenamiento():
+    from lv.almacen_sql import descripcion_segura, url_base
+    if url_base():
+        st.success(f"Base de datos externa: {descripcion_segura(url_base())}. Los datos persisten aunque Streamlit se reinicie, "
+                   "y el conector de voz de Claude escribe en esta misma base.")
+        st.caption("La dirección completa de conexión es un secreto y no se muestra.")
+        return
     ruta = ruta_base()
     st.write(f"Base de datos: `{ruta}`")
     temporal = any(s in ruta for s in ("/tmp", "/mount/src")) or bool(os.environ.get("STREAMLIT_SHARING_MODE")) \
         or os.environ.get("HOSTNAME", "").startswith("streamlit")
     if temporal:
         st.error("La base parece estar en un disco temporal (por ejemplo, Streamlit Community Cloud). "
-                 "Los datos pueden perderse al reiniciar o redesplegar. Usa un servidor con disco persistente y define LEGADO_VERDE_DB.")
+                 "Los datos pueden perderse al reiniciar o redesplegar. Configura DATABASE_URL (PostgreSQL externo) en los secretos de la app.")
     else:
         st.info("Los datos persisten mientras esta ruta esté en un disco persistente del servidor. Descarga respaldos con regularidad.")
     st.caption("Las ventas se guardan con control de versión: si dos sesiones guardan a la vez, ninguna sobrescribe a la otra en silencio.")

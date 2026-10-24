@@ -16,6 +16,8 @@ Aplicación Streamlit para registrar ventas, cobros y gastos, y consultar result
 | `lv/` | Lógica nueva: modelo de venta, operaciones atómicas, importación, reportes, respaldos, integraciones. |
 | `registrar_venta.py` | Registra ventas desde un JSON/CSV con la misma lógica de la app (vista previa y `--confirmar`). |
 | `convertir_reportes.py` | Convierte los reportes descargados de Mercado Libre (Excel de ventas) y Amazon (transacciones CSV) al formato de importación. |
+| `servidor_mcp.py` | Conector de voz para Claude (MCP remoto): consultar y registrar ventas en dos pasos. Se despliega en Render con `render.yaml`. |
+| `lv/almacen_sql.py` | Base PostgreSQL externa compartida por Streamlit y el conector (se activa con `DATABASE_URL`). |
 | `sync_worker.py` | Proceso de sincronización con Mercado Libre y Amazon, independiente de Streamlit. |
 | `webhook_ml.py` | Receptor de notificaciones `orders_v2` de Mercado Libre. |
 | `tests/` | Pruebas automáticas contra el `motor.py` real. `tests/stubs/` simula Streamlit y Plotly solo para pruebas de humo. |
@@ -28,6 +30,24 @@ streamlit run app.py
 ```
 
 Pruebas: `python -m unittest discover -s tests -p "test_*.py"`
+
+## Base de datos permanente y conector de voz
+
+```
+Claude (voz, CarPlay) → servidor_mcp.py (Render) ─┐
+                                                   ├→ PostgreSQL externo (Neon, DATABASE_URL)
+Tablero Streamlit ─────────────────────────────────┘
+```
+
+1. Crea un proyecto gratuito en Neon y copia su cadena de conexión (`postgresql://…`).
+2. Streamlit Cloud → tu app → *Settings → Secrets*: `DATABASE_URL = "postgresql://…"`. Al guardar, la app se reinicia y usa esa base; restaura tu respaldo JSON en *Configuración y respaldos*.
+3. Render → *New → Blueprint* → este repositorio. Pega la misma `DATABASE_URL`; `MCP_TOKEN` se genera solo.
+4. Claude → *Configuración → Conectores → Agregar conector personalizado*: `https://<servicio>.onrender.com/mcp?key=<MCP_TOKEN>`.
+5. En *Configuración y respaldos → Parámetros* define el costo de producción por sobre para que las ventas por voz lleven costo confirmado.
+
+Registrar por voz: Claude prepara la venta, te la lee y solo la guarda si respondes con un «sí» claro. Repetir la confirmación no duplica. Venta directa (cafeterías) entra sin comisión ni costo de entrega salvo que los digas; en marketplaces la comisión queda pendiente.
+
+Límites del plan gratuito: el servicio de Render se duerme tras 15 minutos sin uso y tarda cerca de un minuto en despertar (la primera orden puede fallar; repítela). Neon suspende el cómputo tras 5 minutos de inactividad sin borrar datos (1 GB por proyecto).
 
 ## Dónde viven los datos (importante)
 
