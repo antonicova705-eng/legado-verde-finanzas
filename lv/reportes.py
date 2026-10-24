@@ -180,3 +180,20 @@ def simular(volumen: float, costo_variable: float, fijos: float, mezcla: list[di
             "resultado": contrib - fijos,
             "pe_sobres": (fijos / contrib_sobre) if contrib_sobre and contrib_sobre > 0 else None,
             "pe_ventas": (fijos / margen) if margen and margen > 0 else None}
+
+
+def historico_reportado(datos: dict) -> list[dict]:
+    """Cifras heredadas SIN fecha exacta ni verificación (resúmenes previos al sistema).
+
+    Se muestran aparte para dar contexto; no entran a estados financieros ni a
+    indicadores del periodo hasta que se fechen o se desglosen.
+    """
+    m = _m()
+    filas = []
+    for r in datos["operaciones"]:
+        if not m.activo(r) or r.get("Fecha"):
+            continue
+        filas.append({"Periodo reportado": r.get("Mes") or "Sin periodo", "Canal": r.get("Canal"),
+                      "Sobres": r.get("Cantidad") or 0, "Ventas reportadas": float(r.get("Ventas Producto") or 0),
+                      "Remanente reportado": r.get("Remanente"), "ID": r["ID"]})
+    return filas

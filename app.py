@@ -88,11 +88,23 @@ def ir_a_registrar():
     ss["venta_sel"] = "Nueva venta"
 
 
+def etiqueta_periodo() -> str:
+    a, b = date.fromisoformat(inicio), date.fromisoformat(fin)
+    if a.day == 1 and b == fin_de_mes(a.year, a.month):
+        return f"{MESES[a.month - 1]} {a.year}"
+    if a == date(a.year, 1, 1) and b == date(a.year, 12, 31):
+        return f"Año {a.year}"
+    return f"Del {a:%d/%m/%Y} al {b:%d/%m/%Y}"
+
+
 def encabezado(titulo: str, descripcion: str | None = None, boton: bool = True):
     c1, c2 = st.columns([4, 1.2], vertical_alignment="bottom")
-    c1.markdown(f"# {titulo}")
+    with c1:
+        ui.periodo(etiqueta_periodo())
+        st.markdown(f"# {titulo}")
     if boton:
-        c2.button("Registrar venta", type="primary", on_click=ir_a_registrar, width="stretch", key=f"rv_{titulo}")
+        c2.button("Registrar venta", type="primary", icon=":material/add:", on_click=ir_a_registrar,
+                  width="stretch", key=f"rv_{titulo}")
     if descripcion:
         ui.subtitulo(descripcion)
     mostrar_aviso()
@@ -127,7 +139,11 @@ def periodo_sidebar():
 
 # ====================================================================== barra lateral
 st.sidebar.image("https://drive.google.com/thumbnail?id=1j9PfF082J_VzWP2bQURgQw8BVgeI3aK9&sz=w1000", width="stretch")
-pagina = st.sidebar.radio("Secciones", PAGINAS, key="pagina", label_visibility="collapsed")
+ICONOS = {"Inicio": ":material/space_dashboard:", "Ventas": ":material/point_of_sale:",
+          "Costos y gastos": ":material/receipt_long:", "Finanzas": ":material/account_balance:",
+          "Simulador": ":material/tune:", "Configuración y respaldos": ":material/settings:"}
+pagina = st.sidebar.radio("Secciones", PAGINAS, key="pagina", label_visibility="collapsed",
+                          format_func=lambda p: f"{ICONOS[p]}  {p}")
 st.sidebar.divider()
 inicio, fin = periodo_sidebar()
 if st.sidebar.button("Actualizar datos", width="stretch", help="Trae cambios guardados desde otra sesión o por la sincronización."):
@@ -140,7 +156,7 @@ cv_unit, cf_mes = M.costos_catalogo(datos["catalogo"], cfg["tc_usd"], cfg["vol_p
 
 # ====================================================================== INICIO
 def pagina_inicio():
-    encabezado("Inicio", "Resumen del periodo seleccionado. Cada cifra indica si es un dato registrado, preliminar o no disponible.")
+    encabezado("Inicio", "Cada cifra indica si es un dato registrado, preliminar o no disponible.")
     pend = reportes.pendientes(datos, inicio, fin)
     preliminar = bool(pend)
     rep = M.reporte(datos, inicio, fin)
@@ -156,7 +172,7 @@ def pagina_inicio():
     est = "pre" if preliminar else "ok"
     ui.franja([
         {"etiqueta": "Ventas netas de producto", "valor": moneda(c["venta_neta_producto"], ""), "estado": est,
-         "nota": "Preliminar: hay pendientes" if preliminar else "Registrado"},
+         "nota": "Preliminar: hay pendientes" if preliminar else "Registrado", "destacado": True},
         {"etiqueta": "Sobres netos vendidos", "valor": None if c["sobres_netos"] is None else f"{c['sobres_netos']:,}",
          "estado": "nd" if c["sobres_netos"] is None else est,
          "nota": f"{c['sobres']:,} vendidos; devoluciones desconocidas en {c['devueltos_desconocidos']}" if c["sobres_netos"] is None else None},
@@ -236,6 +252,23 @@ def pagina_inicio():
                                    marker=dict(size=12, color=ui.OLIVA)))
             st.plotly_chart(ui.layout_grafica(f, 300), width="stretch")
             st.caption(f"Equilibrio teórico: {pe_u:,} sobres al mes. Supuestos del catálogo; no son costos reales del periodo.")
+
+    hist = reportes.historico_reportado(datos)
+    if hist:
+        st.markdown("### Histórico reportado (antes del sistema)")
+        dfh = pd.DataFrame(hist)
+        orden = list(dict.fromkeys(dfh["Periodo reportado"]))
+        fig = go.Figure()
+        for i, (canal_h, grupo) in enumerate(dfh.groupby("Canal", sort=False)):
+            fig.add_trace(go.Bar(name=canal_h, x=grupo["Periodo reportado"], y=grupo["Ventas reportadas"],
+                                 marker_color=ui.SERIE[i % len(ui.SERIE)],
+                                 customdata=grupo[["Sobres"]].values,
+                                 hovertemplate="%{x}<br>$%{y:,.2f} · %{customdata[0]} sobres<extra>" + str(canal_h) + "</extra>"))
+        fig.update_layout(barmode="group", xaxis=dict(categoryorder="array", categoryarray=orden))
+        st.plotly_chart(ui.layout_grafica(fig, 300), width="stretch")
+        st.caption(f"Cifras reportadas sin fecha exacta ni verificación: {int(dfh['Sobres'].sum()):,} sobres y "
+                   f"{moneda(dfh['Ventas reportadas'].sum())}. No entran a estados financieros ni a los indicadores del periodo "
+                   "hasta que se fechen o se importen desglosadas desde la plataforma.")
 
     st.markdown(f"### Pendientes de información ({len(pend)})")
     if pend:
