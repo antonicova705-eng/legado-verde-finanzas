@@ -1,0 +1,35 @@
+{
+  "formato": "legado-verde-ventas",
+  "version": 1,
+  "generado_por": "Claude",
+  "nota": "EJEMPLO de formato a partir de la frase de muestra; no es una venta real. No lo importes en la base del negocio.",
+  "ventas": [
+    {
+      "clave": "claude-20261023-ejemplo-0001",
+      "fecha": "2026-10-23",
+      "canal": "Cafeterías",
+      "cliente": null,
+      "referencia": null,
+      "producto": "Guacamole Liofilizado 40g",
+      "presentacion": "Sobre individual",
+      "presentaciones": 10,
+      "precio_presentacion": 60,
+      "descuento": 0,
+      "devolucion": 0,
+      "sobres_devueltos": 0,
+      "envio": 0,
+      "comisiones": null,
+      "logistica": null,
+      "costo": null,
+      "costo_confirmado": false,
+      "estado": "Entregado",
+      "notas": "Interpretado de: «10 sobres a una cafetería, a $60 cada uno, realizada hoy; cobrada por transferencia»",
+      "cobro": {
+        "fecha": "2026-10-23",
+        "importe": 600,
+        "medio": "Transferencia",
+        "referencia": null
+      }
+    }
+  ]
+}
